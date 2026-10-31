@@ -10,12 +10,16 @@
       },
       "plant": {
         "title": "Heating plant",
-        "description": "The sensors of your heating controller (e.g. a district heating unit or a boiler controller).",
+        "description": "The sensors of your heating controller, and what it can control. Directly connected district heating can usually only limit the return temperature; a mixing loop, heat exchanger, boiler or heat pump controls the supply.",
         "data": {
           "supply_temperature_entity_id": "Supply temperature",
           "return_temperature_entity_id": "Return temperature",
           "outdoor_temperature_entity_id": "Outdoor temperature (optional)",
           "weather_entity_id": "Weather (optional)",
+          "control_mode": "What the controller can control",
+          "return_limit_entity_id": "Return temperature limit (optional)",
+          "return_limit_min_temperature": "Lowest return limit",
+          "return_limit_max_temperature": "Highest return limit",
           "supply_reference_entity_id": "Supply temperature reference (optional)",
           "supply_min_temperature": "Lowest supply temperature",
           "supply_max_temperature": "Highest supply temperature"
@@ -25,9 +29,13 @@
           "return_temperature_entity_id": "Measured return temperature from the radiators.",
           "outdoor_temperature_entity_id": "Outdoor temperature sensor. Either this or a weather entity is required.",
           "weather_entity_id": "Used for the outdoor temperature when no outdoor sensor is chosen.",
-          "supply_reference_entity_id": "The supply temperature the controller is aiming for. The advice is relative to it; without it the measured supply is used.",
-          "supply_min_temperature": "The advice never goes below this.",
-          "supply_max_temperature": "The advice never goes above this."
+          "control_mode": "Decides which advice Degree Dealer gives.",
+          "return_limit_entity_id": "The controller's current return limit (e.g. the return temperature reference). The advice is relative to it; without it the measured return is used. Only for return limit control.",
+          "return_limit_min_temperature": "The advice never goes below this.",
+          "return_limit_max_temperature": "The advice never goes above this.",
+          "supply_reference_entity_id": "The supply temperature the controller is aiming for. The advice is relative to it; without it the measured supply is used. Only for supply control.",
+          "supply_min_temperature": "The advice never goes below this (supply control).",
+          "supply_max_temperature": "The advice never goes above this (supply control)."
         }
       },
       "rooms": {
@@ -47,7 +55,7 @@
           "opening_entity_ids": "Windows and doors",
           "motion_entity_ids": "Motion and presence",
           "humidity_entity_ids": "Humidity sensors",
-          "exclude_from_supply": "Ignore for the supply temperature"
+          "exclude_from_supply": "Keep out of the advice"
         },
         "data_description": {
           "climate_entity_ids": "Radiator thermostats or other climate entities in the room.",
@@ -56,7 +64,7 @@
           "opening_entity_ids": "While one is open the room pauses learning and does not decide the supply temperature.",
           "motion_entity_ids": "Shows whether the room is in use (used for room setbacks later).",
           "humidity_entity_ids": "Shown with the room (used for mould protection later).",
-          "exclude_from_supply": "Turn on for rooms that should not decide the supply temperature, e.g. a bathroom with floor heating or a room that is always cold."
+          "exclude_from_supply": "Turn on for rooms that should not decide the advice (supply or return limit), e.g. a bathroom with floor heating or a room that is always cold."
         }
       },
       "meter": {
@@ -119,12 +127,16 @@
     "step": {
       "plant": {
         "title": "Heating plant",
-        "description": "The sensors of your heating controller (e.g. a district heating unit or a boiler controller).",
+        "description": "The sensors of your heating controller, and what it can control. Directly connected district heating can usually only limit the return temperature; a mixing loop, heat exchanger, boiler or heat pump controls the supply.",
         "data": {
           "supply_temperature_entity_id": "Supply temperature",
           "return_temperature_entity_id": "Return temperature",
           "outdoor_temperature_entity_id": "Outdoor temperature (optional)",
           "weather_entity_id": "Weather (optional)",
+          "control_mode": "What the controller can control",
+          "return_limit_entity_id": "Return temperature limit (optional)",
+          "return_limit_min_temperature": "Lowest return limit",
+          "return_limit_max_temperature": "Highest return limit",
           "supply_reference_entity_id": "Supply temperature reference (optional)",
           "supply_min_temperature": "Lowest supply temperature",
           "supply_max_temperature": "Highest supply temperature"
@@ -134,9 +146,13 @@
           "return_temperature_entity_id": "Measured return temperature from the radiators.",
           "outdoor_temperature_entity_id": "Outdoor temperature sensor. Either this or a weather entity is required.",
           "weather_entity_id": "Used for the outdoor temperature when no outdoor sensor is chosen.",
-          "supply_reference_entity_id": "The supply temperature the controller is aiming for. The advice is relative to it; without it the measured supply is used.",
-          "supply_min_temperature": "The advice never goes below this.",
-          "supply_max_temperature": "The advice never goes above this."
+          "control_mode": "Decides which advice Degree Dealer gives.",
+          "return_limit_entity_id": "The controller's current return limit (e.g. the return temperature reference). The advice is relative to it; without it the measured return is used. Only for return limit control.",
+          "return_limit_min_temperature": "The advice never goes below this.",
+          "return_limit_max_temperature": "The advice never goes above this.",
+          "supply_reference_entity_id": "The supply temperature the controller is aiming for. The advice is relative to it; without it the measured supply is used. Only for supply control.",
+          "supply_min_temperature": "The advice never goes below this (supply control).",
+          "supply_max_temperature": "The advice never goes above this (supply control)."
         }
       },
       "rooms": {
@@ -156,7 +172,7 @@
           "opening_entity_ids": "Windows and doors",
           "motion_entity_ids": "Motion and presence",
           "humidity_entity_ids": "Humidity sensors",
-          "exclude_from_supply": "Ignore for the supply temperature"
+          "exclude_from_supply": "Keep out of the advice"
         },
         "data_description": {
           "climate_entity_ids": "Radiator thermostats or other climate entities in the room.",
@@ -165,7 +181,7 @@
           "opening_entity_ids": "While one is open the room pauses learning and does not decide the supply temperature.",
           "motion_entity_ids": "Shows whether the room is in use (used for room setbacks later).",
           "humidity_entity_ids": "Shown with the room (used for mould protection later).",
-          "exclude_from_supply": "Turn on for rooms that should not decide the supply temperature, e.g. a bathroom with floor heating or a room that is always cold."
+          "exclude_from_supply": "Turn on for rooms that should not decide the advice (supply or return limit), e.g. a bathroom with floor heating or a room that is always cold."
         }
       },
       "meter": {
@@ -224,7 +240,21 @@
       "room_empty": "Choose at least one thermostat or temperature sensor."
     }
   },
+  "selector": {
+    "control_mode": {
+      "options": {
+        "return": "Return temperature limit (directly connected district heating)",
+        "supply": "Supply temperature (mixing loop, heat exchanger, boiler, heat pump)",
+        "none": "Nothing: only monitor and advise on setbacks"
+      }
+    }
+  },
   "entity": {
+    "button": {
+      "learn_from_history": {
+        "name": "Learn from history"
+      }
+    },
     "sensor": {
       "indoor_temperature": {
         "name": "Indoor temperature"
@@ -234,6 +264,9 @@
       },
       "supply_advice": {
         "name": "Recommended supply temperature"
+      },
+      "return_limit_advice": {
+        "name": "Recommended return limit"
       },
       "supply_return_difference": {
         "name": "Cooling (supply - return)"

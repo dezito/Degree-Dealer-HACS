@@ -78,6 +78,26 @@ set back only if saving - cost > threshold
 - Rate limit controller writes (>= 0.5 K change, a few per hour).
 - Shadow mode first: recommendations without writes.
 
+## Control modes
+
+Many district heating plants are connected directly: the radiators get the utility's supply
+and the controller can only limit the return temperature by throttling the flow. Degree
+Dealer therefore advises what the plant can actually control:
+
+- `return` (default): the lowest return limit that still lets every room get enough heat.
+  Raise it only when a room is starved while the return is at the limit (the limiter holds
+  the flow back); a starved room with the return well below the limit is a radiator, valve
+  or supply problem, not a limit problem. Otherwise lower it towards the return target.
+- `supply`: the valve-led supply temperature described below.
+- `none`: no control advice, only monitoring and setbacks.
+
+## Learning from the history
+
+On the first start (and with the *Learn from history* button) the recorder is used as far
+back as it goes: long-term statistics (daily means, kept forever) for the heat loss fit before
+the recorded states, and the recorded states (keep_days) replayed in 5 minute steps through the
+same snapshot/learn code as live. The heat loss fit only uses days below 12 °C outside.
+
 ## Rooms
 
 A room is a Home Assistant area. The flow pre-fills each area with its

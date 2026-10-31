@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 DOMAIN = "degree_dealer"
 MANUFACTURER = "Degree Dealer"
 DEFAULT_NAME = "Degree Dealer"
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 UPDATE_INTERVAL = timedelta(minutes=5)
 STORAGE_VERSION = 1
@@ -24,6 +24,16 @@ CONF_WEATHER = "weather_entity_id"
 CONF_SUPPLY_REFERENCE = "supply_reference_entity_id"
 CONF_SUPPLY_MIN = "supply_min_temperature"
 CONF_SUPPLY_MAX = "supply_max_temperature"
+# what the controller can control: the supply (mixing loop, heat exchanger, boiler, heat pump),
+# only a return temperature limit (directly connected district heating) or nothing
+CONF_CONTROL_MODE = "control_mode"
+CONTROL_SUPPLY = "supply"
+CONTROL_RETURN = "return"
+CONTROL_NONE = "none"
+CONTROL_MODES = (CONTROL_RETURN, CONTROL_SUPPLY, CONTROL_NONE)
+CONF_RETURN_LIMIT = "return_limit_entity_id"
+CONF_RETURN_LIMIT_MIN = "return_limit_min_temperature"
+CONF_RETURN_LIMIT_MAX = "return_limit_max_temperature"
 
 # Rooms: one per Home Assistant area
 CONF_AREAS = "areas"
@@ -57,7 +67,19 @@ CONF_NIGHT_START = "night_start"
 CONF_NIGHT_END = "night_end"
 CONF_MANUAL_UA = "manual_heat_loss_coefficient"
 
-PLANT_KEYS = (CONF_SUPPLY, CONF_RETURN, CONF_OUTDOOR, CONF_WEATHER, CONF_SUPPLY_REFERENCE, CONF_SUPPLY_MIN, CONF_SUPPLY_MAX)
+PLANT_KEYS = (
+    CONF_SUPPLY,
+    CONF_RETURN,
+    CONF_OUTDOOR,
+    CONF_WEATHER,
+    CONF_CONTROL_MODE,
+    CONF_SUPPLY_REFERENCE,
+    CONF_SUPPLY_MIN,
+    CONF_SUPPLY_MAX,
+    CONF_RETURN_LIMIT,
+    CONF_RETURN_LIMIT_MIN,
+    CONF_RETURN_LIMIT_MAX,
+)
 METER_KEYS = (CONF_HEAT_ENERGY, CONF_METER_LAG, CONF_EXPECTED_RETURN, CONF_TARGET_RETURN)
 ECONOMY_KEYS = (
     CONF_HEAT_PRICE,
@@ -81,8 +103,11 @@ DEFAULT_HEAT_UP_RATE = 1.0  # K/h
 def default_options() -> dict[str, Any]:
     """Options with a default value (entity ids have none)."""
     return {
+        CONF_CONTROL_MODE: CONTROL_RETURN,
         CONF_SUPPLY_MIN: 20.0,
         CONF_SUPPLY_MAX: 80.0,
+        CONF_RETURN_LIMIT_MIN: 20.0,
+        CONF_RETURN_LIMIT_MAX: 60.0,
         CONF_ROOMS: [],
         CONF_METER_LAG: 0,
         CONF_TARGET_RETURN: 35.0,

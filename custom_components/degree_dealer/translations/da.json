@@ -10,12 +10,16 @@
       },
       "plant": {
         "title": "Varmeanlæg",
-        "description": "Sensorerne fra din varmestyring (f.eks. en fjernvarmeunit eller en kedelstyring).",
+        "description": "Sensorerne fra din varmestyring, og hvad den kan styre. Direkte koblet fjernvarme kan som regel kun begrænse returtemperaturen; en shunt, varmeveksler, kedel eller varmepumpe styrer fremløbet.",
         "data": {
           "supply_temperature_entity_id": "Fremløbstemperatur",
           "return_temperature_entity_id": "Returtemperatur",
           "outdoor_temperature_entity_id": "Udetemperatur (valgfri)",
           "weather_entity_id": "Vejr (valgfri)",
+          "control_mode": "Hvad styringen kan styre",
+          "return_limit_entity_id": "Returtemperaturgrænse (valgfri)",
+          "return_limit_min_temperature": "Laveste returgrænse",
+          "return_limit_max_temperature": "Højeste returgrænse",
           "supply_reference_entity_id": "Fremløbsreference (valgfri)",
           "supply_min_temperature": "Laveste fremløbstemperatur",
           "supply_max_temperature": "Højeste fremløbstemperatur"
@@ -25,9 +29,13 @@
           "return_temperature_entity_id": "Målt returtemperatur fra radiatorerne.",
           "outdoor_temperature_entity_id": "Sensor med udetemperaturen. Denne eller en vejr-entitet skal vælges.",
           "weather_entity_id": "Bruges til udetemperaturen, når der ikke er valgt en udeføler.",
-          "supply_reference_entity_id": "Den fremløbstemperatur styringen sigter efter. Anbefalingen er i forhold til den; uden den bruges det målte fremløb.",
-          "supply_min_temperature": "Anbefalingen går aldrig under denne.",
-          "supply_max_temperature": "Anbefalingen går aldrig over denne."
+          "control_mode": "Bestemmer hvilken anbefaling Degree Dealer giver.",
+          "return_limit_entity_id": "Styringens nuværende returgrænse (f.eks. returtemperaturreferencen). Anbefalingen er i forhold til den; uden den bruges den målte retur. Kun ved styring af returgrænse.",
+          "return_limit_min_temperature": "Anbefalingen går aldrig under denne.",
+          "return_limit_max_temperature": "Anbefalingen går aldrig over denne.",
+          "supply_reference_entity_id": "Den fremløbstemperatur styringen sigter efter. Anbefalingen er i forhold til den; uden den bruges det målte fremløb. Kun ved styring af fremløb.",
+          "supply_min_temperature": "Anbefalingen går aldrig under denne (styring af fremløb).",
+          "supply_max_temperature": "Anbefalingen går aldrig over denne (styring af fremløb)."
         }
       },
       "rooms": {
@@ -47,7 +55,7 @@
           "opening_entity_ids": "Vinduer og døre",
           "motion_entity_ids": "Bevægelse og tilstedeværelse",
           "humidity_entity_ids": "Fugtsensorer",
-          "exclude_from_supply": "Ignorér ved fremløbstemperaturen"
+          "exclude_from_supply": "Hold ude af anbefalingen"
         },
         "data_description": {
           "climate_entity_ids": "Radiatortermostater eller andre climate-entiteter i rummet.",
@@ -56,7 +64,7 @@
           "opening_entity_ids": "Mens en er åben, holder rummet pause i læringen og bestemmer ikke fremløbstemperaturen.",
           "motion_entity_ids": "Viser om rummet er i brug (bruges senere til sænkning per rum).",
           "humidity_entity_ids": "Vises sammen med rummet (bruges senere til skimmelbeskyttelse).",
-          "exclude_from_supply": "Slå til for rum der ikke skal bestemme fremløbstemperaturen, f.eks. et badeværelse med gulvvarme eller et rum der altid er koldt."
+          "exclude_from_supply": "Slå til for rum der ikke skal bestemme anbefalingen (fremløb eller returgrænse), f.eks. et badeværelse med gulvvarme eller et rum der altid er koldt."
         }
       },
       "meter": {
@@ -119,12 +127,16 @@
     "step": {
       "plant": {
         "title": "Varmeanlæg",
-        "description": "Sensorerne fra din varmestyring (f.eks. en fjernvarmeunit eller en kedelstyring).",
+        "description": "Sensorerne fra din varmestyring, og hvad den kan styre. Direkte koblet fjernvarme kan som regel kun begrænse returtemperaturen; en shunt, varmeveksler, kedel eller varmepumpe styrer fremløbet.",
         "data": {
           "supply_temperature_entity_id": "Fremløbstemperatur",
           "return_temperature_entity_id": "Returtemperatur",
           "outdoor_temperature_entity_id": "Udetemperatur (valgfri)",
           "weather_entity_id": "Vejr (valgfri)",
+          "control_mode": "Hvad styringen kan styre",
+          "return_limit_entity_id": "Returtemperaturgrænse (valgfri)",
+          "return_limit_min_temperature": "Laveste returgrænse",
+          "return_limit_max_temperature": "Højeste returgrænse",
           "supply_reference_entity_id": "Fremløbsreference (valgfri)",
           "supply_min_temperature": "Laveste fremløbstemperatur",
           "supply_max_temperature": "Højeste fremløbstemperatur"
@@ -134,9 +146,13 @@
           "return_temperature_entity_id": "Målt returtemperatur fra radiatorerne.",
           "outdoor_temperature_entity_id": "Sensor med udetemperaturen. Denne eller en vejr-entitet skal vælges.",
           "weather_entity_id": "Bruges til udetemperaturen, når der ikke er valgt en udeføler.",
-          "supply_reference_entity_id": "Den fremløbstemperatur styringen sigter efter. Anbefalingen er i forhold til den; uden den bruges det målte fremløb.",
-          "supply_min_temperature": "Anbefalingen går aldrig under denne.",
-          "supply_max_temperature": "Anbefalingen går aldrig over denne."
+          "control_mode": "Bestemmer hvilken anbefaling Degree Dealer giver.",
+          "return_limit_entity_id": "Styringens nuværende returgrænse (f.eks. returtemperaturreferencen). Anbefalingen er i forhold til den; uden den bruges den målte retur. Kun ved styring af returgrænse.",
+          "return_limit_min_temperature": "Anbefalingen går aldrig under denne.",
+          "return_limit_max_temperature": "Anbefalingen går aldrig over denne.",
+          "supply_reference_entity_id": "Den fremløbstemperatur styringen sigter efter. Anbefalingen er i forhold til den; uden den bruges det målte fremløb. Kun ved styring af fremløb.",
+          "supply_min_temperature": "Anbefalingen går aldrig under denne (styring af fremløb).",
+          "supply_max_temperature": "Anbefalingen går aldrig over denne (styring af fremløb)."
         }
       },
       "rooms": {
@@ -156,7 +172,7 @@
           "opening_entity_ids": "Vinduer og døre",
           "motion_entity_ids": "Bevægelse og tilstedeværelse",
           "humidity_entity_ids": "Fugtsensorer",
-          "exclude_from_supply": "Ignorér ved fremløbstemperaturen"
+          "exclude_from_supply": "Hold ude af anbefalingen"
         },
         "data_description": {
           "climate_entity_ids": "Radiatortermostater eller andre climate-entiteter i rummet.",
@@ -165,7 +181,7 @@
           "opening_entity_ids": "Mens en er åben, holder rummet pause i læringen og bestemmer ikke fremløbstemperaturen.",
           "motion_entity_ids": "Viser om rummet er i brug (bruges senere til sænkning per rum).",
           "humidity_entity_ids": "Vises sammen med rummet (bruges senere til skimmelbeskyttelse).",
-          "exclude_from_supply": "Slå til for rum der ikke skal bestemme fremløbstemperaturen, f.eks. et badeværelse med gulvvarme eller et rum der altid er koldt."
+          "exclude_from_supply": "Slå til for rum der ikke skal bestemme anbefalingen (fremløb eller returgrænse), f.eks. et badeværelse med gulvvarme eller et rum der altid er koldt."
         }
       },
       "meter": {
@@ -224,7 +240,21 @@
       "room_empty": "Vælg mindst én termostat eller temperaturføler."
     }
   },
+  "selector": {
+    "control_mode": {
+      "options": {
+        "return": "Returtemperaturgrænse (direkte koblet fjernvarme)",
+        "supply": "Fremløbstemperatur (shunt, varmeveksler, kedel, varmepumpe)",
+        "none": "Intet: kun overvågning og råd om sænkning"
+      }
+    }
+  },
   "entity": {
+    "button": {
+      "learn_from_history": {
+        "name": "Lær fra historik"
+      }
+    },
     "sensor": {
       "indoor_temperature": {
         "name": "Indetemperatur"
@@ -234,6 +264,9 @@
       },
       "supply_advice": {
         "name": "Anbefalet fremløbstemperatur"
+      },
+      "return_limit_advice": {
+        "name": "Anbefalet returgrænse"
       },
       "supply_return_difference": {
         "name": "Afkøling (frem - retur)"

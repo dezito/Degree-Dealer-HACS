@@ -9,14 +9,13 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription, SensorStateClass
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DegreeDealerConfigEntry
-from .const import DOMAIN, MANUFACTURER
+from .const import CONF_CONTROL_MODE, CONTROL_RETURN, CONTROL_SUPPLY
 from .coordinator import DegreeDealerCoordinator, DegreeDealerData
+from .entity import DegreeDealerEntity
 
 
 def _round(value: float | None, digits: int = 1) -> float | None:
@@ -39,7 +38,8 @@ def _advice(data: DegreeDealerData) -> dict[str, Any]:
         "reason": advice.reason if advice else None,
         "key_room": advice.key_room if advice else None,
         "key_demand": advice.key_demand if advice else None,
-        "supply_base": data.supply_base,
+        "control_mode": data.control_mode,
+        "current": data.advice_base,
         "cold_rooms": [room.name for room in data.rooms if room.cold_minutes > 0],
     }
 
@@ -91,6 +91,8 @@ def _setback(data: DegreeDealerData) -> dict[str, Any]:
 class DegreeDealerSensorDescription(SensorEntityDescription):
     value_fn: Callable[[DegreeDealerData], StateType]
     attrs_fn: Callable[[DegreeDealerData], dict[str, Any]] | None = None
+    # only created for these control modes (None = always)
+    control_modes: tuple[str, ...] | None = None
 
 
 TEMPERATURE = {
@@ -118,7 +120,18 @@ SENSORS: tuple[DegreeDealerSensorDescription, ...] = (
         attrs_fn=_rooms,
     ),
     DegreeDealerSensorDescription(
-        key="supply_advice", value_fn=lambda data: data.advice.target if data.advice else None, attrs_fn=_advice, **TEMPERATURE
+        key="supply_advice",
+        value_fn=lambda data: data.advice.target if data.advice else None,
+        attrs_fn=_advice,
+        control_modes=(CONTROL_SUPPLY,),
+        **TEMPERATURE,
+    ),
+    DegreeDealerSensorDescription(
+        key="return_limit_advice",
+        value_fn=lambda data: data.advice.target if data.advice else None,
+        attrs_fn=_advice,
+        control_modes=(CONTROL_RETURN,),
+        **TEMPERATURE,
     ),
     DegreeDealerSensorDescription(
         key="supply_return_difference",
@@ -164,6 +177,7 @@ SENSORS: tuple[DegreeDealerSensorDescription, ...] = (
         key="learning_days",
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda data: data.learning_days,
+        attrs_fn=lambda data: {f"history_{key}": value for key, value in data.history.items()},
     ),
 )
 
@@ -172,26 +186,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: DegreeDealerConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data
-    async_add_entities(DegreeDealerSensor(coordinator, description) for description in SENSORS)
+    mode = coordinator.options[CONF_CONTROL_MODE]
+    async_add_entities(
+        DegreeDealerSensor(coordinator, description)
+        for description in SENSORS
+        if description.control_modes is None or mode in description.control_modes
+    )
 
 
-class DegreeDealerSensor(CoordinatorEntity[DegreeDealerCoordinator], SensorEntity):
-    _attr_has_entity_name = True
+class DegreeDealerSensor(DegreeDealerEntity, SensorEntity):
     entity_description: DegreeDealerSensorDescription
 
     def __init__(self, coordinator: DegreeDealerCoordinator, description: DegreeDealerSensorDescription) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        entry = coordinator.entry
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_translation_key = description.key
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-            manufacturer=MANUFACTURER,
-            model="Degree Dealer",
-            entry_type=DeviceEntryType.SERVICE,
-        )
 
     @property
     def native_value(self) -> StateType:

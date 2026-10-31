@@ -10,12 +10,16 @@
       },
       "plant": {
         "title": "Instalacja grzewcza",
-        "description": "Czujniki twojego regulatora ogrzewania (np. węzła cieplnego lub sterownika kotła).",
+        "description": "Czujniki twojego regulatora ogrzewania i to, czym może sterować. Ciepło sieciowe podłączone bezpośrednio zwykle może tylko ograniczać temperaturę powrotu; obieg mieszający, wymiennik ciepła, kocioł lub pompa ciepła sterują zasilaniem.",
         "data": {
           "supply_temperature_entity_id": "Temperatura zasilania",
           "return_temperature_entity_id": "Temperatura powrotu",
           "outdoor_temperature_entity_id": "Temperatura zewnętrzna (opcjonalnie)",
           "weather_entity_id": "Pogoda (opcjonalnie)",
+          "control_mode": "Czym może sterować regulator",
+          "return_limit_entity_id": "Limit temperatury powrotu (opcjonalnie)",
+          "return_limit_min_temperature": "Najniższy limit powrotu",
+          "return_limit_max_temperature": "Najwyższy limit powrotu",
           "supply_reference_entity_id": "Zadana temperatura zasilania (opcjonalnie)",
           "supply_min_temperature": "Najniższa temperatura zasilania",
           "supply_max_temperature": "Najwyższa temperatura zasilania"
@@ -25,9 +29,13 @@
           "return_temperature_entity_id": "Zmierzona temperatura powrotu z grzejników.",
           "outdoor_temperature_entity_id": "Czujnik temperatury zewnętrznej. Wymagany jest ten czujnik lub encja pogody.",
           "weather_entity_id": "Używana jako temperatura zewnętrzna, gdy nie wybrano czujnika zewnętrznego.",
-          "supply_reference_entity_id": "Temperatura zasilania, do której dąży regulator. Zalecenie odnosi się do niej; bez niej używane jest zmierzone zasilanie.",
-          "supply_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości.",
-          "supply_max_temperature": "Zalecenie nigdy nie przekracza tej wartości."
+          "control_mode": "Decyduje, jakie zalecenie daje Degree Dealer.",
+          "return_limit_entity_id": "Bieżący limit powrotu regulatora (np. zadana temperatura powrotu). Zalecenie odnosi się do niego; bez niego używany jest zmierzony powrót. Tylko przy sterowaniu limitem powrotu.",
+          "return_limit_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości.",
+          "return_limit_max_temperature": "Zalecenie nigdy nie przekracza tej wartości.",
+          "supply_reference_entity_id": "Temperatura zasilania, do której dąży regulator. Zalecenie odnosi się do niej; bez niej używane jest zmierzone zasilanie. Tylko przy sterowaniu zasilaniem.",
+          "supply_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości (sterowanie zasilaniem).",
+          "supply_max_temperature": "Zalecenie nigdy nie przekracza tej wartości (sterowanie zasilaniem)."
         }
       },
       "rooms": {
@@ -47,7 +55,7 @@
           "opening_entity_ids": "Okna i drzwi",
           "motion_entity_ids": "Ruch i obecność",
           "humidity_entity_ids": "Czujniki wilgotności",
-          "exclude_from_supply": "Ignoruj przy temperaturze zasilania"
+          "exclude_from_supply": "Pomiń w zaleceniu"
         },
         "data_description": {
           "climate_entity_ids": "Termostaty grzejnikowe lub inne encje climate w pomieszczeniu.",
@@ -56,7 +64,7 @@
           "opening_entity_ids": "Gdy któreś jest otwarte, pomieszczenie wstrzymuje naukę i nie decyduje o temperaturze zasilania.",
           "motion_entity_ids": "Pokazuje, czy pomieszczenie jest używane (później do obniżenia w pomieszczeniu).",
           "humidity_entity_ids": "Pokazywane przy pomieszczeniu (później do ochrony przed pleśnią).",
-          "exclude_from_supply": "Włącz dla pomieszczeń, które nie powinny decydować o temperaturze zasilania, np. łazienki z ogrzewaniem podłogowym lub pomieszczenia, które zawsze jest zimne."
+          "exclude_from_supply": "Włącz dla pomieszczeń, które nie powinny decydować o zaleceniu (zasilanie lub limit powrotu), np. łazienki z ogrzewaniem podłogowym lub pomieszczenia, które zawsze jest zimne."
         }
       },
       "meter": {
@@ -119,12 +127,16 @@
     "step": {
       "plant": {
         "title": "Instalacja grzewcza",
-        "description": "Czujniki twojego regulatora ogrzewania (np. węzła cieplnego lub sterownika kotła).",
+        "description": "Czujniki twojego regulatora ogrzewania i to, czym może sterować. Ciepło sieciowe podłączone bezpośrednio zwykle może tylko ograniczać temperaturę powrotu; obieg mieszający, wymiennik ciepła, kocioł lub pompa ciepła sterują zasilaniem.",
         "data": {
           "supply_temperature_entity_id": "Temperatura zasilania",
           "return_temperature_entity_id": "Temperatura powrotu",
           "outdoor_temperature_entity_id": "Temperatura zewnętrzna (opcjonalnie)",
           "weather_entity_id": "Pogoda (opcjonalnie)",
+          "control_mode": "Czym może sterować regulator",
+          "return_limit_entity_id": "Limit temperatury powrotu (opcjonalnie)",
+          "return_limit_min_temperature": "Najniższy limit powrotu",
+          "return_limit_max_temperature": "Najwyższy limit powrotu",
           "supply_reference_entity_id": "Zadana temperatura zasilania (opcjonalnie)",
           "supply_min_temperature": "Najniższa temperatura zasilania",
           "supply_max_temperature": "Najwyższa temperatura zasilania"
@@ -134,9 +146,13 @@
           "return_temperature_entity_id": "Zmierzona temperatura powrotu z grzejników.",
           "outdoor_temperature_entity_id": "Czujnik temperatury zewnętrznej. Wymagany jest ten czujnik lub encja pogody.",
           "weather_entity_id": "Używana jako temperatura zewnętrzna, gdy nie wybrano czujnika zewnętrznego.",
-          "supply_reference_entity_id": "Temperatura zasilania, do której dąży regulator. Zalecenie odnosi się do niej; bez niej używane jest zmierzone zasilanie.",
-          "supply_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości.",
-          "supply_max_temperature": "Zalecenie nigdy nie przekracza tej wartości."
+          "control_mode": "Decyduje, jakie zalecenie daje Degree Dealer.",
+          "return_limit_entity_id": "Bieżący limit powrotu regulatora (np. zadana temperatura powrotu). Zalecenie odnosi się do niego; bez niego używany jest zmierzony powrót. Tylko przy sterowaniu limitem powrotu.",
+          "return_limit_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości.",
+          "return_limit_max_temperature": "Zalecenie nigdy nie przekracza tej wartości.",
+          "supply_reference_entity_id": "Temperatura zasilania, do której dąży regulator. Zalecenie odnosi się do niej; bez niej używane jest zmierzone zasilanie. Tylko przy sterowaniu zasilaniem.",
+          "supply_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości (sterowanie zasilaniem).",
+          "supply_max_temperature": "Zalecenie nigdy nie przekracza tej wartości (sterowanie zasilaniem)."
         }
       },
       "rooms": {
@@ -156,7 +172,7 @@
           "opening_entity_ids": "Okna i drzwi",
           "motion_entity_ids": "Ruch i obecność",
           "humidity_entity_ids": "Czujniki wilgotności",
-          "exclude_from_supply": "Ignoruj przy temperaturze zasilania"
+          "exclude_from_supply": "Pomiń w zaleceniu"
         },
         "data_description": {
           "climate_entity_ids": "Termostaty grzejnikowe lub inne encje climate w pomieszczeniu.",
@@ -165,7 +181,7 @@
           "opening_entity_ids": "Gdy któreś jest otwarte, pomieszczenie wstrzymuje naukę i nie decyduje o temperaturze zasilania.",
           "motion_entity_ids": "Pokazuje, czy pomieszczenie jest używane (później do obniżenia w pomieszczeniu).",
           "humidity_entity_ids": "Pokazywane przy pomieszczeniu (później do ochrony przed pleśnią).",
-          "exclude_from_supply": "Włącz dla pomieszczeń, które nie powinny decydować o temperaturze zasilania, np. łazienki z ogrzewaniem podłogowym lub pomieszczenia, które zawsze jest zimne."
+          "exclude_from_supply": "Włącz dla pomieszczeń, które nie powinny decydować o zaleceniu (zasilanie lub limit powrotu), np. łazienki z ogrzewaniem podłogowym lub pomieszczenia, które zawsze jest zimne."
         }
       },
       "meter": {
@@ -224,7 +240,21 @@
       "room_empty": "Wybierz co najmniej jeden termostat lub czujnik temperatury."
     }
   },
+  "selector": {
+    "control_mode": {
+      "options": {
+        "return": "Limit temperatury powrotu (ciepło sieciowe podłączone bezpośrednio)",
+        "supply": "Temperatura zasilania (obieg mieszający, wymiennik ciepła, kocioł, pompa ciepła)",
+        "none": "Nic: tylko monitorowanie i porady dotyczące obniżenia"
+      }
+    }
+  },
   "entity": {
+    "button": {
+      "learn_from_history": {
+        "name": "Ucz z historii"
+      }
+    },
     "sensor": {
       "indoor_temperature": {
         "name": "Temperatura wewnętrzna"
@@ -234,6 +264,9 @@
       },
       "supply_advice": {
         "name": "Zalecana temperatura zasilania"
+      },
+      "return_limit_advice": {
+        "name": "Zalecany limit powrotu"
       },
       "supply_return_difference": {
         "name": "Schłodzenie (zasilanie - powrót)"
