@@ -1,0 +1,261 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tilføj Degree Dealer",
+        "description": "Degree Dealer lærer hvordan dit hus bruger fjernvarmen og anbefaler fremløbstemperatur, mål for returtemperatur og en natsænkning der kan betale sig.\n\nDenne version regner og anbefaler kun; den styrer ikke noget endnu.",
+        "data": {
+          "name": "Navn"
+        }
+      },
+      "plant": {
+        "title": "Varmeanlæg",
+        "description": "Sensorerne fra din varmestyring (f.eks. en fjernvarmeunit eller en kedelstyring).",
+        "data": {
+          "supply_temperature_entity_id": "Fremløbstemperatur",
+          "return_temperature_entity_id": "Returtemperatur",
+          "outdoor_temperature_entity_id": "Udetemperatur (valgfri)",
+          "weather_entity_id": "Vejr (valgfri)",
+          "supply_reference_entity_id": "Fremløbsreference (valgfri)",
+          "supply_min_temperature": "Laveste fremløbstemperatur",
+          "supply_max_temperature": "Højeste fremløbstemperatur"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Målt fremløbstemperatur til radiatorerne.",
+          "return_temperature_entity_id": "Målt returtemperatur fra radiatorerne.",
+          "outdoor_temperature_entity_id": "Sensor med udetemperaturen. Denne eller en vejr-entitet skal vælges.",
+          "weather_entity_id": "Bruges til udetemperaturen, når der ikke er valgt en udeføler.",
+          "supply_reference_entity_id": "Den fremløbstemperatur styringen sigter efter. Anbefalingen er i forhold til den; uden den bruges det målte fremløb.",
+          "supply_min_temperature": "Anbefalingen går aldrig under denne.",
+          "supply_max_temperature": "Anbefalingen går aldrig over denne."
+        }
+      },
+      "rooms": {
+        "title": "Rum",
+        "description": "Vælg områderne med opvarmede rum. De næste sider viser hvad der er fundet i hvert område, så du kan tjekke og rette det.",
+        "data": {
+          "areas": "Områder"
+        }
+      },
+      "room": {
+        "title": "Rum: {room}",
+        "description": "Fundet i **{room}**. Tjek entiteterne og ret dem om nødvendigt. Et rum skal have mindst en termostat eller en temperaturføler.",
+        "data": {
+          "climate_entity_ids": "Termostater",
+          "temperature_entity_ids": "Temperaturfølere",
+          "valve_entity_ids": "Ventilbehov",
+          "opening_entity_ids": "Vinduer og døre",
+          "motion_entity_ids": "Bevægelse og tilstedeværelse",
+          "humidity_entity_ids": "Fugtsensorer",
+          "exclude_from_supply": "Ignorér ved fremløbstemperaturen"
+        },
+        "data_description": {
+          "climate_entity_ids": "Radiatortermostater eller andre climate-entiteter i rummet.",
+          "temperature_entity_ids": "Gennemsnittet bruges som rumtemperatur. Uden dem bruges termostaternes egen temperatur.",
+          "valve_entity_ids": "Sensorer med ventilåbning eller varmebehov i procent (0-100 %). Den højeste bruges. Uden dem bruges termostaternes varmer/hviler-tilstand.",
+          "opening_entity_ids": "Mens en er åben, holder rummet pause i læringen og bestemmer ikke fremløbstemperaturen.",
+          "motion_entity_ids": "Viser om rummet er i brug (bruges senere til sænkning per rum).",
+          "humidity_entity_ids": "Vises sammen med rummet (bruges senere til skimmelbeskyttelse).",
+          "exclude_from_supply": "Slå til for rum der ikke skal bestemme fremløbstemperaturen, f.eks. et badeværelse med gulvvarme eller et rum der altid er koldt."
+        }
+      },
+      "meter": {
+        "title": "Målerdata",
+        "description": "Valgfri data fra din varmemåler eller dit forsyningsselskab. Bruges til at lære hvor meget varme huset taber per grad.",
+        "data": {
+          "heat_energy_entity_id": "Varmemåler (valgfri)",
+          "meter_lag_days": "Forsinkelse på målerdata",
+          "expected_return_entity_id": "Forventet returtemperatur (valgfri)",
+          "target_return_temperature": "Mål for returtemperatur"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Sensor med målerstanden i Wh, kWh, MWh, MJ eller GJ (en total der stiger).",
+          "meter_lag_days": "Antal dage målerdata kommer for sent. 0 for en lokal måler, ofte 1 for data fra forsyningsselskabet.",
+          "expected_return_entity_id": "Den returtemperatur dit forsyningsselskab forventer. Bruges som mål i stedet for den faste værdi.",
+          "target_return_temperature": "Bruges når der ikke er valgt en forventet returtemperatur."
+        }
+      },
+      "economy": {
+        "title": "Økonomi og sænkning",
+        "description": "Priser og grænser for natsænkningen. Priser er i din Home Assistant-valuta.",
+        "data": {
+          "heat_price": "Varmepris per kWh",
+          "return_penalty": "Returtemperatur-tarif",
+          "recovery_return_rise": "Returstigning under genopvarmning",
+          "min_saving": "Mindste besparelse",
+          "min_room_temperature": "Laveste rumtemperatur",
+          "max_setback": "Største sænkning",
+          "night_start": "Nat starter",
+          "night_end": "Nat slutter",
+          "manual_heat_loss_coefficient": "Varmetabskoefficient (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Din variable pris per kWh varme inkl. afgifter.",
+          "return_penalty": "Ekstra pris per K returtemperatur per MWh (motivationstarif). 0 hvis dit værk ikke har en.",
+          "recovery_return_rise": "Hvor mange K returtemperaturen stiger, mens huset varmes op igen efter en sænkning.",
+          "min_saving": "En sænkning anbefales kun, når den sparer mindst dette per nat.",
+          "min_room_temperature": "Sænkningen lader aldrig rummene komme under dette (skimmel og komfort).",
+          "max_setback": "Største sænkning i K under komforttemperaturen.",
+          "night_end": "Rummene skal være tilbage på komforttemperatur på dette tidspunkt.",
+          "manual_heat_loss_coefficient": "0 for at lære den fra målerdata. Angiv den, hvis du ikke har målerdata eller kender værdien."
+        }
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Degree Dealer kan tilføje et dashboard i sidebaren med anbefalingen, fremløb og retur, natsænkningen, husmodellen og én sektion per rum. Du kan redigere det i brugerfladen.",
+        "data": {
+          "dashboard": "Vis dashboardet i sidebaren"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Fremløb og retur skal være forskellige sensorer.",
+      "outdoor_required": "Vælg en udeføler eller en vejr-entitet.",
+      "no_areas": "Vælg mindst ét område.",
+      "room_empty": "Vælg mindst én termostat eller temperaturføler."
+    }
+  },
+  "options": {
+    "step": {
+      "plant": {
+        "title": "Varmeanlæg",
+        "description": "Sensorerne fra din varmestyring (f.eks. en fjernvarmeunit eller en kedelstyring).",
+        "data": {
+          "supply_temperature_entity_id": "Fremløbstemperatur",
+          "return_temperature_entity_id": "Returtemperatur",
+          "outdoor_temperature_entity_id": "Udetemperatur (valgfri)",
+          "weather_entity_id": "Vejr (valgfri)",
+          "supply_reference_entity_id": "Fremløbsreference (valgfri)",
+          "supply_min_temperature": "Laveste fremløbstemperatur",
+          "supply_max_temperature": "Højeste fremløbstemperatur"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Målt fremløbstemperatur til radiatorerne.",
+          "return_temperature_entity_id": "Målt returtemperatur fra radiatorerne.",
+          "outdoor_temperature_entity_id": "Sensor med udetemperaturen. Denne eller en vejr-entitet skal vælges.",
+          "weather_entity_id": "Bruges til udetemperaturen, når der ikke er valgt en udeføler.",
+          "supply_reference_entity_id": "Den fremløbstemperatur styringen sigter efter. Anbefalingen er i forhold til den; uden den bruges det målte fremløb.",
+          "supply_min_temperature": "Anbefalingen går aldrig under denne.",
+          "supply_max_temperature": "Anbefalingen går aldrig over denne."
+        }
+      },
+      "rooms": {
+        "title": "Rum",
+        "description": "Vælg områderne med opvarmede rum. De næste sider viser hvad der er fundet i hvert område, så du kan tjekke og rette det.",
+        "data": {
+          "areas": "Områder"
+        }
+      },
+      "room": {
+        "title": "Rum: {room}",
+        "description": "Fundet i **{room}**. Tjek entiteterne og ret dem om nødvendigt. Et rum skal have mindst en termostat eller en temperaturføler.",
+        "data": {
+          "climate_entity_ids": "Termostater",
+          "temperature_entity_ids": "Temperaturfølere",
+          "valve_entity_ids": "Ventilbehov",
+          "opening_entity_ids": "Vinduer og døre",
+          "motion_entity_ids": "Bevægelse og tilstedeværelse",
+          "humidity_entity_ids": "Fugtsensorer",
+          "exclude_from_supply": "Ignorér ved fremløbstemperaturen"
+        },
+        "data_description": {
+          "climate_entity_ids": "Radiatortermostater eller andre climate-entiteter i rummet.",
+          "temperature_entity_ids": "Gennemsnittet bruges som rumtemperatur. Uden dem bruges termostaternes egen temperatur.",
+          "valve_entity_ids": "Sensorer med ventilåbning eller varmebehov i procent (0-100 %). Den højeste bruges. Uden dem bruges termostaternes varmer/hviler-tilstand.",
+          "opening_entity_ids": "Mens en er åben, holder rummet pause i læringen og bestemmer ikke fremløbstemperaturen.",
+          "motion_entity_ids": "Viser om rummet er i brug (bruges senere til sænkning per rum).",
+          "humidity_entity_ids": "Vises sammen med rummet (bruges senere til skimmelbeskyttelse).",
+          "exclude_from_supply": "Slå til for rum der ikke skal bestemme fremløbstemperaturen, f.eks. et badeværelse med gulvvarme eller et rum der altid er koldt."
+        }
+      },
+      "meter": {
+        "title": "Målerdata",
+        "description": "Valgfri data fra din varmemåler eller dit forsyningsselskab. Bruges til at lære hvor meget varme huset taber per grad.",
+        "data": {
+          "heat_energy_entity_id": "Varmemåler (valgfri)",
+          "meter_lag_days": "Forsinkelse på målerdata",
+          "expected_return_entity_id": "Forventet returtemperatur (valgfri)",
+          "target_return_temperature": "Mål for returtemperatur"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Sensor med målerstanden i Wh, kWh, MWh, MJ eller GJ (en total der stiger).",
+          "meter_lag_days": "Antal dage målerdata kommer for sent. 0 for en lokal måler, ofte 1 for data fra forsyningsselskabet.",
+          "expected_return_entity_id": "Den returtemperatur dit forsyningsselskab forventer. Bruges som mål i stedet for den faste værdi.",
+          "target_return_temperature": "Bruges når der ikke er valgt en forventet returtemperatur."
+        }
+      },
+      "economy": {
+        "title": "Økonomi og sænkning",
+        "description": "Priser og grænser for natsænkningen. Priser er i din Home Assistant-valuta.",
+        "data": {
+          "heat_price": "Varmepris per kWh",
+          "return_penalty": "Returtemperatur-tarif",
+          "recovery_return_rise": "Returstigning under genopvarmning",
+          "min_saving": "Mindste besparelse",
+          "min_room_temperature": "Laveste rumtemperatur",
+          "max_setback": "Største sænkning",
+          "night_start": "Nat starter",
+          "night_end": "Nat slutter",
+          "manual_heat_loss_coefficient": "Varmetabskoefficient (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Din variable pris per kWh varme inkl. afgifter.",
+          "return_penalty": "Ekstra pris per K returtemperatur per MWh (motivationstarif). 0 hvis dit værk ikke har en.",
+          "recovery_return_rise": "Hvor mange K returtemperaturen stiger, mens huset varmes op igen efter en sænkning.",
+          "min_saving": "En sænkning anbefales kun, når den sparer mindst dette per nat.",
+          "min_room_temperature": "Sænkningen lader aldrig rummene komme under dette (skimmel og komfort).",
+          "max_setback": "Største sænkning i K under komforttemperaturen.",
+          "night_end": "Rummene skal være tilbage på komforttemperatur på dette tidspunkt.",
+          "manual_heat_loss_coefficient": "0 for at lære den fra målerdata. Angiv den, hvis du ikke har målerdata eller kender værdien."
+        }
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Degree Dealer kan tilføje et dashboard i sidebaren med anbefalingen, fremløb og retur, natsænkningen, husmodellen og én sektion per rum. Du kan redigere det i brugerfladen.",
+        "data": {
+          "dashboard": "Vis dashboardet i sidebaren"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Fremløb og retur skal være forskellige sensorer.",
+      "outdoor_required": "Vælg en udeføler eller en vejr-entitet.",
+      "no_areas": "Vælg mindst ét område.",
+      "room_empty": "Vælg mindst én termostat eller temperaturføler."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Indetemperatur"
+      },
+      "heat_demand": {
+        "name": "Varmebehov"
+      },
+      "supply_advice": {
+        "name": "Anbefalet fremløbstemperatur"
+      },
+      "supply_return_difference": {
+        "name": "Afkøling (frem - retur)"
+      },
+      "return_excess": {
+        "name": "Retur over mål"
+      },
+      "heat_loss_coefficient": {
+        "name": "Varmetabskoefficient"
+      },
+      "time_constant": {
+        "name": "Afkølingstidskonstant"
+      },
+      "heat_up_rate": {
+        "name": "Opvarmningshastighed"
+      },
+      "night_setback": {
+        "name": "Natsænkning"
+      },
+      "learning_days": {
+        "name": "Dage lært"
+      }
+    }
+  }
+}

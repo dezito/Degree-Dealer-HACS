@@ -1,0 +1,261 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Degree Dealer",
+        "description": "Degree Dealer learns how your house uses district heating and advises a supply temperature, a return temperature target and a night setback that pays off.\n\nThis version only calculates and advises; it does not control anything yet.",
+        "data": {
+          "name": "Name"
+        }
+      },
+      "plant": {
+        "title": "Heating plant",
+        "description": "The sensors of your heating controller (e.g. a district heating unit or a boiler controller).",
+        "data": {
+          "supply_temperature_entity_id": "Supply temperature",
+          "return_temperature_entity_id": "Return temperature",
+          "outdoor_temperature_entity_id": "Outdoor temperature (optional)",
+          "weather_entity_id": "Weather (optional)",
+          "supply_reference_entity_id": "Supply temperature reference (optional)",
+          "supply_min_temperature": "Lowest supply temperature",
+          "supply_max_temperature": "Highest supply temperature"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Measured supply (flow) temperature to the radiators.",
+          "return_temperature_entity_id": "Measured return temperature from the radiators.",
+          "outdoor_temperature_entity_id": "Outdoor temperature sensor. Either this or a weather entity is required.",
+          "weather_entity_id": "Used for the outdoor temperature when no outdoor sensor is chosen.",
+          "supply_reference_entity_id": "The supply temperature the controller is aiming for. The advice is relative to it; without it the measured supply is used.",
+          "supply_min_temperature": "The advice never goes below this.",
+          "supply_max_temperature": "The advice never goes above this."
+        }
+      },
+      "rooms": {
+        "title": "Rooms",
+        "description": "Choose the areas with heated rooms. The next pages show what was found in each area, so you can check and adjust it.",
+        "data": {
+          "areas": "Areas"
+        }
+      },
+      "room": {
+        "title": "Room: {room}",
+        "description": "Found in **{room}**. Check the entities and adjust them if needed. A room needs at least a thermostat or a temperature sensor.",
+        "data": {
+          "climate_entity_ids": "Thermostats",
+          "temperature_entity_ids": "Temperature sensors",
+          "valve_entity_ids": "Valve demand",
+          "opening_entity_ids": "Windows and doors",
+          "motion_entity_ids": "Motion and presence",
+          "humidity_entity_ids": "Humidity sensors",
+          "exclude_from_supply": "Ignore for the supply temperature"
+        },
+        "data_description": {
+          "climate_entity_ids": "Radiator thermostats or other climate entities in the room.",
+          "temperature_entity_ids": "The mean is used as the room temperature. Without them the thermostats' own temperature is used.",
+          "valve_entity_ids": "Sensors with valve opening or heating demand in percent (0-100 %). The highest is used. Without them the thermostats' heating/idle state is used.",
+          "opening_entity_ids": "While one is open the room pauses learning and does not decide the supply temperature.",
+          "motion_entity_ids": "Shows whether the room is in use (used for room setbacks later).",
+          "humidity_entity_ids": "Shown with the room (used for mould protection later).",
+          "exclude_from_supply": "Turn on for rooms that should not decide the supply temperature, e.g. a bathroom with floor heating or a room that is always cold."
+        }
+      },
+      "meter": {
+        "title": "Meter data",
+        "description": "Optional data from your heat meter or utility. It is used to learn how much heat the house loses per degree.",
+        "data": {
+          "heat_energy_entity_id": "Heat meter (optional)",
+          "meter_lag_days": "Meter data delay",
+          "expected_return_entity_id": "Expected return temperature (optional)",
+          "target_return_temperature": "Return temperature target"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Sensor with the meter reading in Wh, kWh, MWh, MJ or GJ (a total that increases).",
+          "meter_lag_days": "Days the meter readings arrive late. 0 for a local meter, often 1 for data from the utility.",
+          "expected_return_entity_id": "The return temperature your utility expects. Used as the target instead of the fixed value.",
+          "target_return_temperature": "Used when no expected return temperature is chosen."
+        }
+      },
+      "economy": {
+        "title": "Economy and setback",
+        "description": "Prices and limits for the night setback. Prices are in your Home Assistant currency.",
+        "data": {
+          "heat_price": "Heat price per kWh",
+          "return_penalty": "Return temperature tariff",
+          "recovery_return_rise": "Return rise while recovering",
+          "min_saving": "Minimum saving",
+          "min_room_temperature": "Lowest room temperature",
+          "max_setback": "Largest setback",
+          "night_start": "Night starts",
+          "night_end": "Night ends",
+          "manual_heat_loss_coefficient": "Heat loss coefficient (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Your variable price per kWh of heat including taxes.",
+          "return_penalty": "Extra cost per K return temperature per MWh (motivation tariff). 0 if your utility has none.",
+          "recovery_return_rise": "How many K the return temperature rises while the house heats back up after a setback.",
+          "min_saving": "A setback is only advised when it saves at least this per night.",
+          "min_room_temperature": "The setback never lets the rooms go below this (mould and comfort).",
+          "max_setback": "Largest setback in K below the comfort temperature.",
+          "night_end": "The rooms must be back at comfort temperature at this time.",
+          "manual_heat_loss_coefficient": "0 to learn it from the meter data. Set it if you have no meter data or know the value."
+        }
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Degree Dealer can add a dashboard to the sidebar with the advice, supply and return, the night setback, the house model and one section per room. You can edit it in the UI.",
+        "data": {
+          "dashboard": "Show the dashboard in the sidebar"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Supply and return must be different sensors.",
+      "outdoor_required": "Choose an outdoor temperature sensor or a weather entity.",
+      "no_areas": "Choose at least one area.",
+      "room_empty": "Choose at least one thermostat or temperature sensor."
+    }
+  },
+  "options": {
+    "step": {
+      "plant": {
+        "title": "Heating plant",
+        "description": "The sensors of your heating controller (e.g. a district heating unit or a boiler controller).",
+        "data": {
+          "supply_temperature_entity_id": "Supply temperature",
+          "return_temperature_entity_id": "Return temperature",
+          "outdoor_temperature_entity_id": "Outdoor temperature (optional)",
+          "weather_entity_id": "Weather (optional)",
+          "supply_reference_entity_id": "Supply temperature reference (optional)",
+          "supply_min_temperature": "Lowest supply temperature",
+          "supply_max_temperature": "Highest supply temperature"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Measured supply (flow) temperature to the radiators.",
+          "return_temperature_entity_id": "Measured return temperature from the radiators.",
+          "outdoor_temperature_entity_id": "Outdoor temperature sensor. Either this or a weather entity is required.",
+          "weather_entity_id": "Used for the outdoor temperature when no outdoor sensor is chosen.",
+          "supply_reference_entity_id": "The supply temperature the controller is aiming for. The advice is relative to it; without it the measured supply is used.",
+          "supply_min_temperature": "The advice never goes below this.",
+          "supply_max_temperature": "The advice never goes above this."
+        }
+      },
+      "rooms": {
+        "title": "Rooms",
+        "description": "Choose the areas with heated rooms. The next pages show what was found in each area, so you can check and adjust it.",
+        "data": {
+          "areas": "Areas"
+        }
+      },
+      "room": {
+        "title": "Room: {room}",
+        "description": "Found in **{room}**. Check the entities and adjust them if needed. A room needs at least a thermostat or a temperature sensor.",
+        "data": {
+          "climate_entity_ids": "Thermostats",
+          "temperature_entity_ids": "Temperature sensors",
+          "valve_entity_ids": "Valve demand",
+          "opening_entity_ids": "Windows and doors",
+          "motion_entity_ids": "Motion and presence",
+          "humidity_entity_ids": "Humidity sensors",
+          "exclude_from_supply": "Ignore for the supply temperature"
+        },
+        "data_description": {
+          "climate_entity_ids": "Radiator thermostats or other climate entities in the room.",
+          "temperature_entity_ids": "The mean is used as the room temperature. Without them the thermostats' own temperature is used.",
+          "valve_entity_ids": "Sensors with valve opening or heating demand in percent (0-100 %). The highest is used. Without them the thermostats' heating/idle state is used.",
+          "opening_entity_ids": "While one is open the room pauses learning and does not decide the supply temperature.",
+          "motion_entity_ids": "Shows whether the room is in use (used for room setbacks later).",
+          "humidity_entity_ids": "Shown with the room (used for mould protection later).",
+          "exclude_from_supply": "Turn on for rooms that should not decide the supply temperature, e.g. a bathroom with floor heating or a room that is always cold."
+        }
+      },
+      "meter": {
+        "title": "Meter data",
+        "description": "Optional data from your heat meter or utility. It is used to learn how much heat the house loses per degree.",
+        "data": {
+          "heat_energy_entity_id": "Heat meter (optional)",
+          "meter_lag_days": "Meter data delay",
+          "expected_return_entity_id": "Expected return temperature (optional)",
+          "target_return_temperature": "Return temperature target"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Sensor with the meter reading in Wh, kWh, MWh, MJ or GJ (a total that increases).",
+          "meter_lag_days": "Days the meter readings arrive late. 0 for a local meter, often 1 for data from the utility.",
+          "expected_return_entity_id": "The return temperature your utility expects. Used as the target instead of the fixed value.",
+          "target_return_temperature": "Used when no expected return temperature is chosen."
+        }
+      },
+      "economy": {
+        "title": "Economy and setback",
+        "description": "Prices and limits for the night setback. Prices are in your Home Assistant currency.",
+        "data": {
+          "heat_price": "Heat price per kWh",
+          "return_penalty": "Return temperature tariff",
+          "recovery_return_rise": "Return rise while recovering",
+          "min_saving": "Minimum saving",
+          "min_room_temperature": "Lowest room temperature",
+          "max_setback": "Largest setback",
+          "night_start": "Night starts",
+          "night_end": "Night ends",
+          "manual_heat_loss_coefficient": "Heat loss coefficient (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Your variable price per kWh of heat including taxes.",
+          "return_penalty": "Extra cost per K return temperature per MWh (motivation tariff). 0 if your utility has none.",
+          "recovery_return_rise": "How many K the return temperature rises while the house heats back up after a setback.",
+          "min_saving": "A setback is only advised when it saves at least this per night.",
+          "min_room_temperature": "The setback never lets the rooms go below this (mould and comfort).",
+          "max_setback": "Largest setback in K below the comfort temperature.",
+          "night_end": "The rooms must be back at comfort temperature at this time.",
+          "manual_heat_loss_coefficient": "0 to learn it from the meter data. Set it if you have no meter data or know the value."
+        }
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Degree Dealer can add a dashboard to the sidebar with the advice, supply and return, the night setback, the house model and one section per room. You can edit it in the UI.",
+        "data": {
+          "dashboard": "Show the dashboard in the sidebar"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Supply and return must be different sensors.",
+      "outdoor_required": "Choose an outdoor temperature sensor or a weather entity.",
+      "no_areas": "Choose at least one area.",
+      "room_empty": "Choose at least one thermostat or temperature sensor."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "heat_demand": {
+        "name": "Heat demand"
+      },
+      "supply_advice": {
+        "name": "Recommended supply temperature"
+      },
+      "supply_return_difference": {
+        "name": "Cooling (supply - return)"
+      },
+      "return_excess": {
+        "name": "Return above target"
+      },
+      "heat_loss_coefficient": {
+        "name": "Heat loss coefficient"
+      },
+      "time_constant": {
+        "name": "Cooling time constant"
+      },
+      "heat_up_rate": {
+        "name": "Heat-up rate"
+      },
+      "night_setback": {
+        "name": "Night setback"
+      },
+      "learning_days": {
+        "name": "Days learnt"
+      }
+    }
+  }
+}

@@ -1,0 +1,261 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dodaj Degree Dealer",
+        "description": "Degree Dealer uczy się, jak twój dom zużywa ciepło sieciowe, i zaleca temperaturę zasilania, cel temperatury powrotu oraz nocne obniżenie, które się opłaca.\n\nTa wersja tylko oblicza i doradza; jeszcze niczym nie steruje.",
+        "data": {
+          "name": "Nazwa"
+        }
+      },
+      "plant": {
+        "title": "Instalacja grzewcza",
+        "description": "Czujniki twojego regulatora ogrzewania (np. węzła cieplnego lub sterownika kotła).",
+        "data": {
+          "supply_temperature_entity_id": "Temperatura zasilania",
+          "return_temperature_entity_id": "Temperatura powrotu",
+          "outdoor_temperature_entity_id": "Temperatura zewnętrzna (opcjonalnie)",
+          "weather_entity_id": "Pogoda (opcjonalnie)",
+          "supply_reference_entity_id": "Zadana temperatura zasilania (opcjonalnie)",
+          "supply_min_temperature": "Najniższa temperatura zasilania",
+          "supply_max_temperature": "Najwyższa temperatura zasilania"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Zmierzona temperatura zasilania grzejników.",
+          "return_temperature_entity_id": "Zmierzona temperatura powrotu z grzejników.",
+          "outdoor_temperature_entity_id": "Czujnik temperatury zewnętrznej. Wymagany jest ten czujnik lub encja pogody.",
+          "weather_entity_id": "Używana jako temperatura zewnętrzna, gdy nie wybrano czujnika zewnętrznego.",
+          "supply_reference_entity_id": "Temperatura zasilania, do której dąży regulator. Zalecenie odnosi się do niej; bez niej używane jest zmierzone zasilanie.",
+          "supply_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości.",
+          "supply_max_temperature": "Zalecenie nigdy nie przekracza tej wartości."
+        }
+      },
+      "rooms": {
+        "title": "Pomieszczenia",
+        "description": "Wybierz obszary z ogrzewanymi pomieszczeniami. Kolejne strony pokażą, co znaleziono w każdym obszarze, aby można było to sprawdzić i poprawić.",
+        "data": {
+          "areas": "Obszary"
+        }
+      },
+      "room": {
+        "title": "Pomieszczenie: {room}",
+        "description": "Znaleziono w **{room}**. Sprawdź encje i w razie potrzeby je popraw. Pomieszczenie potrzebuje co najmniej termostatu lub czujnika temperatury.",
+        "data": {
+          "climate_entity_ids": "Termostaty",
+          "temperature_entity_ids": "Czujniki temperatury",
+          "valve_entity_ids": "Zapotrzebowanie zaworów",
+          "opening_entity_ids": "Okna i drzwi",
+          "motion_entity_ids": "Ruch i obecność",
+          "humidity_entity_ids": "Czujniki wilgotności",
+          "exclude_from_supply": "Ignoruj przy temperaturze zasilania"
+        },
+        "data_description": {
+          "climate_entity_ids": "Termostaty grzejnikowe lub inne encje climate w pomieszczeniu.",
+          "temperature_entity_ids": "Średnia jest używana jako temperatura pomieszczenia. Bez nich używana jest temperatura samych termostatów.",
+          "valve_entity_ids": "Czujniki z otwarciem zaworu lub zapotrzebowaniem na ciepło w procentach (0-100 %). Używana jest najwyższa wartość. Bez nich używany jest stan grzania/bezczynności termostatów.",
+          "opening_entity_ids": "Gdy któreś jest otwarte, pomieszczenie wstrzymuje naukę i nie decyduje o temperaturze zasilania.",
+          "motion_entity_ids": "Pokazuje, czy pomieszczenie jest używane (później do obniżenia w pomieszczeniu).",
+          "humidity_entity_ids": "Pokazywane przy pomieszczeniu (później do ochrony przed pleśnią).",
+          "exclude_from_supply": "Włącz dla pomieszczeń, które nie powinny decydować o temperaturze zasilania, np. łazienki z ogrzewaniem podłogowym lub pomieszczenia, które zawsze jest zimne."
+        }
+      },
+      "meter": {
+        "title": "Dane licznika",
+        "description": "Opcjonalne dane z licznika ciepła lub od dostawcy. Służą do nauki, ile ciepła dom traci na stopień.",
+        "data": {
+          "heat_energy_entity_id": "Licznik ciepła (opcjonalnie)",
+          "meter_lag_days": "Opóźnienie danych licznika",
+          "expected_return_entity_id": "Oczekiwana temperatura powrotu (opcjonalnie)",
+          "target_return_temperature": "Cel temperatury powrotu"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Czujnik ze stanem licznika w Wh, kWh, MWh, MJ lub GJ (rosnąca suma).",
+          "meter_lag_days": "Liczba dni, o które dane licznika się spóźniają. 0 dla lokalnego licznika, często 1 dla danych od dostawcy.",
+          "expected_return_entity_id": "Temperatura powrotu oczekiwana przez dostawcę. Używana jako cel zamiast stałej wartości.",
+          "target_return_temperature": "Używany, gdy nie wybrano oczekiwanej temperatury powrotu."
+        }
+      },
+      "economy": {
+        "title": "Ekonomia i obniżenie",
+        "description": "Ceny i limity nocnego obniżenia. Ceny w walucie Home Assistant.",
+        "data": {
+          "heat_price": "Cena ciepła za kWh",
+          "return_penalty": "Taryfa za temperaturę powrotu",
+          "recovery_return_rise": "Wzrost powrotu podczas dogrzewania",
+          "min_saving": "Minimalna oszczędność",
+          "min_room_temperature": "Najniższa temperatura pomieszczenia",
+          "max_setback": "Największe obniżenie",
+          "night_start": "Początek nocy",
+          "night_end": "Koniec nocy",
+          "manual_heat_loss_coefficient": "Współczynnik strat ciepła (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Twoja zmienna cena za kWh ciepła wraz z podatkami.",
+          "return_penalty": "Dodatkowy koszt za każdy K temperatury powrotu na MWh (taryfa motywacyjna). 0, jeśli dostawca jej nie stosuje.",
+          "recovery_return_rise": "O ile K rośnie temperatura powrotu, gdy dom nagrzewa się po obniżeniu.",
+          "min_saving": "Obniżenie jest zalecane tylko, gdy oszczędza co najmniej tyle na noc.",
+          "min_room_temperature": "Obniżenie nigdy nie pozwala pomieszczeniom spaść poniżej tej wartości (pleśń i komfort).",
+          "max_setback": "Największe obniżenie w K poniżej temperatury komfortowej.",
+          "night_end": "O tej godzinie pomieszczenia muszą wrócić do temperatury komfortowej.",
+          "manual_heat_loss_coefficient": "0, aby nauczyć się go z danych licznika. Ustaw go, jeśli nie masz danych licznika lub znasz wartość."
+        }
+      },
+      "dashboard": {
+        "title": "Panel",
+        "description": "Degree Dealer może dodać panel na pasku bocznym z zaleceniem, zasilaniem i powrotem, nocnym obniżeniem, modelem domu i jedną sekcją na pomieszczenie. Możesz go edytować w interfejsie.",
+        "data": {
+          "dashboard": "Pokaż panel na pasku bocznym"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Zasilanie i powrót muszą być różnymi czujnikami.",
+      "outdoor_required": "Wybierz czujnik temperatury zewnętrznej lub encję pogody.",
+      "no_areas": "Wybierz co najmniej jeden obszar.",
+      "room_empty": "Wybierz co najmniej jeden termostat lub czujnik temperatury."
+    }
+  },
+  "options": {
+    "step": {
+      "plant": {
+        "title": "Instalacja grzewcza",
+        "description": "Czujniki twojego regulatora ogrzewania (np. węzła cieplnego lub sterownika kotła).",
+        "data": {
+          "supply_temperature_entity_id": "Temperatura zasilania",
+          "return_temperature_entity_id": "Temperatura powrotu",
+          "outdoor_temperature_entity_id": "Temperatura zewnętrzna (opcjonalnie)",
+          "weather_entity_id": "Pogoda (opcjonalnie)",
+          "supply_reference_entity_id": "Zadana temperatura zasilania (opcjonalnie)",
+          "supply_min_temperature": "Najniższa temperatura zasilania",
+          "supply_max_temperature": "Najwyższa temperatura zasilania"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Zmierzona temperatura zasilania grzejników.",
+          "return_temperature_entity_id": "Zmierzona temperatura powrotu z grzejników.",
+          "outdoor_temperature_entity_id": "Czujnik temperatury zewnętrznej. Wymagany jest ten czujnik lub encja pogody.",
+          "weather_entity_id": "Używana jako temperatura zewnętrzna, gdy nie wybrano czujnika zewnętrznego.",
+          "supply_reference_entity_id": "Temperatura zasilania, do której dąży regulator. Zalecenie odnosi się do niej; bez niej używane jest zmierzone zasilanie.",
+          "supply_min_temperature": "Zalecenie nigdy nie schodzi poniżej tej wartości.",
+          "supply_max_temperature": "Zalecenie nigdy nie przekracza tej wartości."
+        }
+      },
+      "rooms": {
+        "title": "Pomieszczenia",
+        "description": "Wybierz obszary z ogrzewanymi pomieszczeniami. Kolejne strony pokażą, co znaleziono w każdym obszarze, aby można było to sprawdzić i poprawić.",
+        "data": {
+          "areas": "Obszary"
+        }
+      },
+      "room": {
+        "title": "Pomieszczenie: {room}",
+        "description": "Znaleziono w **{room}**. Sprawdź encje i w razie potrzeby je popraw. Pomieszczenie potrzebuje co najmniej termostatu lub czujnika temperatury.",
+        "data": {
+          "climate_entity_ids": "Termostaty",
+          "temperature_entity_ids": "Czujniki temperatury",
+          "valve_entity_ids": "Zapotrzebowanie zaworów",
+          "opening_entity_ids": "Okna i drzwi",
+          "motion_entity_ids": "Ruch i obecność",
+          "humidity_entity_ids": "Czujniki wilgotności",
+          "exclude_from_supply": "Ignoruj przy temperaturze zasilania"
+        },
+        "data_description": {
+          "climate_entity_ids": "Termostaty grzejnikowe lub inne encje climate w pomieszczeniu.",
+          "temperature_entity_ids": "Średnia jest używana jako temperatura pomieszczenia. Bez nich używana jest temperatura samych termostatów.",
+          "valve_entity_ids": "Czujniki z otwarciem zaworu lub zapotrzebowaniem na ciepło w procentach (0-100 %). Używana jest najwyższa wartość. Bez nich używany jest stan grzania/bezczynności termostatów.",
+          "opening_entity_ids": "Gdy któreś jest otwarte, pomieszczenie wstrzymuje naukę i nie decyduje o temperaturze zasilania.",
+          "motion_entity_ids": "Pokazuje, czy pomieszczenie jest używane (później do obniżenia w pomieszczeniu).",
+          "humidity_entity_ids": "Pokazywane przy pomieszczeniu (później do ochrony przed pleśnią).",
+          "exclude_from_supply": "Włącz dla pomieszczeń, które nie powinny decydować o temperaturze zasilania, np. łazienki z ogrzewaniem podłogowym lub pomieszczenia, które zawsze jest zimne."
+        }
+      },
+      "meter": {
+        "title": "Dane licznika",
+        "description": "Opcjonalne dane z licznika ciepła lub od dostawcy. Służą do nauki, ile ciepła dom traci na stopień.",
+        "data": {
+          "heat_energy_entity_id": "Licznik ciepła (opcjonalnie)",
+          "meter_lag_days": "Opóźnienie danych licznika",
+          "expected_return_entity_id": "Oczekiwana temperatura powrotu (opcjonalnie)",
+          "target_return_temperature": "Cel temperatury powrotu"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Czujnik ze stanem licznika w Wh, kWh, MWh, MJ lub GJ (rosnąca suma).",
+          "meter_lag_days": "Liczba dni, o które dane licznika się spóźniają. 0 dla lokalnego licznika, często 1 dla danych od dostawcy.",
+          "expected_return_entity_id": "Temperatura powrotu oczekiwana przez dostawcę. Używana jako cel zamiast stałej wartości.",
+          "target_return_temperature": "Używany, gdy nie wybrano oczekiwanej temperatury powrotu."
+        }
+      },
+      "economy": {
+        "title": "Ekonomia i obniżenie",
+        "description": "Ceny i limity nocnego obniżenia. Ceny w walucie Home Assistant.",
+        "data": {
+          "heat_price": "Cena ciepła za kWh",
+          "return_penalty": "Taryfa za temperaturę powrotu",
+          "recovery_return_rise": "Wzrost powrotu podczas dogrzewania",
+          "min_saving": "Minimalna oszczędność",
+          "min_room_temperature": "Najniższa temperatura pomieszczenia",
+          "max_setback": "Największe obniżenie",
+          "night_start": "Początek nocy",
+          "night_end": "Koniec nocy",
+          "manual_heat_loss_coefficient": "Współczynnik strat ciepła (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Twoja zmienna cena za kWh ciepła wraz z podatkami.",
+          "return_penalty": "Dodatkowy koszt za każdy K temperatury powrotu na MWh (taryfa motywacyjna). 0, jeśli dostawca jej nie stosuje.",
+          "recovery_return_rise": "O ile K rośnie temperatura powrotu, gdy dom nagrzewa się po obniżeniu.",
+          "min_saving": "Obniżenie jest zalecane tylko, gdy oszczędza co najmniej tyle na noc.",
+          "min_room_temperature": "Obniżenie nigdy nie pozwala pomieszczeniom spaść poniżej tej wartości (pleśń i komfort).",
+          "max_setback": "Największe obniżenie w K poniżej temperatury komfortowej.",
+          "night_end": "O tej godzinie pomieszczenia muszą wrócić do temperatury komfortowej.",
+          "manual_heat_loss_coefficient": "0, aby nauczyć się go z danych licznika. Ustaw go, jeśli nie masz danych licznika lub znasz wartość."
+        }
+      },
+      "dashboard": {
+        "title": "Panel",
+        "description": "Degree Dealer może dodać panel na pasku bocznym z zaleceniem, zasilaniem i powrotem, nocnym obniżeniem, modelem domu i jedną sekcją na pomieszczenie. Możesz go edytować w interfejsie.",
+        "data": {
+          "dashboard": "Pokaż panel na pasku bocznym"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Zasilanie i powrót muszą być różnymi czujnikami.",
+      "outdoor_required": "Wybierz czujnik temperatury zewnętrznej lub encję pogody.",
+      "no_areas": "Wybierz co najmniej jeden obszar.",
+      "room_empty": "Wybierz co najmniej jeden termostat lub czujnik temperatury."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Temperatura wewnętrzna"
+      },
+      "heat_demand": {
+        "name": "Zapotrzebowanie na ciepło"
+      },
+      "supply_advice": {
+        "name": "Zalecana temperatura zasilania"
+      },
+      "supply_return_difference": {
+        "name": "Schłodzenie (zasilanie - powrót)"
+      },
+      "return_excess": {
+        "name": "Powrót powyżej celu"
+      },
+      "heat_loss_coefficient": {
+        "name": "Współczynnik strat ciepła"
+      },
+      "time_constant": {
+        "name": "Stała czasowa stygnięcia"
+      },
+      "heat_up_rate": {
+        "name": "Szybkość nagrzewania"
+      },
+      "night_setback": {
+        "name": "Nocne obniżenie"
+      },
+      "learning_days": {
+        "name": "Dni nauki"
+      }
+    }
+  }
+}

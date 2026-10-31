@@ -1,0 +1,22 @@
+{
+  "domain": "degree_dealer",
+  "name": "Degree Dealer",
+  "after_dependencies": [
+    "recorder",
+    "weather"
+  ],
+  "codeowners": [
+    "@dezito"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "frontend",
+    "lovelace"
+  ],
+  "documentation": "https://github.com/dezito/Degree-Dealer-HACS",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/dezito/Degree-Dealer-HACS/issues",
+  "requirements": [],
+  "version": "0.0.1"
+}

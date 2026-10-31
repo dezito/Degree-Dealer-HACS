@@ -1,0 +1,261 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Degree Dealer hinzufügen",
+        "description": "Degree Dealer lernt, wie dein Haus die Fernwärme nutzt, und empfiehlt eine Vorlauftemperatur, ein Rücklaufziel und eine Nachtabsenkung, die sich lohnt.\n\nDiese Version rechnet und empfiehlt nur; sie steuert noch nichts.",
+        "data": {
+          "name": "Name"
+        }
+      },
+      "plant": {
+        "title": "Heizanlage",
+        "description": "Die Sensoren deiner Heizungsregelung (z. B. einer Fernwärmestation oder eines Kesselreglers).",
+        "data": {
+          "supply_temperature_entity_id": "Vorlauftemperatur",
+          "return_temperature_entity_id": "Rücklauftemperatur",
+          "outdoor_temperature_entity_id": "Außentemperatur (optional)",
+          "weather_entity_id": "Wetter (optional)",
+          "supply_reference_entity_id": "Vorlauf-Sollwert (optional)",
+          "supply_min_temperature": "Niedrigste Vorlauftemperatur",
+          "supply_max_temperature": "Höchste Vorlauftemperatur"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Gemessene Vorlauftemperatur zu den Heizkörpern.",
+          "return_temperature_entity_id": "Gemessene Rücklauftemperatur von den Heizkörpern.",
+          "outdoor_temperature_entity_id": "Sensor mit der Außentemperatur. Dieser oder eine Wetter-Entität ist erforderlich.",
+          "weather_entity_id": "Wird für die Außentemperatur verwendet, wenn kein Außenfühler gewählt ist.",
+          "supply_reference_entity_id": "Die Vorlauftemperatur, die der Regler anstrebt. Die Empfehlung bezieht sich darauf; ohne ihn wird der gemessene Vorlauf verwendet.",
+          "supply_min_temperature": "Die Empfehlung geht nie darunter.",
+          "supply_max_temperature": "Die Empfehlung geht nie darüber."
+        }
+      },
+      "rooms": {
+        "title": "Räume",
+        "description": "Wähle die Bereiche mit beheizten Räumen. Die nächsten Seiten zeigen, was in jedem Bereich gefunden wurde, damit du es prüfen und anpassen kannst.",
+        "data": {
+          "areas": "Bereiche"
+        }
+      },
+      "room": {
+        "title": "Raum: {room}",
+        "description": "Gefunden in **{room}**. Prüfe die Entitäten und passe sie bei Bedarf an. Ein Raum braucht mindestens ein Thermostat oder einen Temperatursensor.",
+        "data": {
+          "climate_entity_ids": "Thermostate",
+          "temperature_entity_ids": "Temperatursensoren",
+          "valve_entity_ids": "Ventilbedarf",
+          "opening_entity_ids": "Fenster und Türen",
+          "motion_entity_ids": "Bewegung und Anwesenheit",
+          "humidity_entity_ids": "Feuchtigkeitssensoren",
+          "exclude_from_supply": "Für die Vorlauftemperatur ignorieren"
+        },
+        "data_description": {
+          "climate_entity_ids": "Heizkörperthermostate oder andere Climate-Entitäten im Raum.",
+          "temperature_entity_ids": "Der Mittelwert wird als Raumtemperatur verwendet. Ohne sie wird die eigene Temperatur der Thermostate verwendet.",
+          "valve_entity_ids": "Sensoren mit Ventilöffnung oder Heizbedarf in Prozent (0-100 %). Der höchste Wert wird verwendet. Ohne sie wird der Heiz-/Leerlaufzustand der Thermostate verwendet.",
+          "opening_entity_ids": "Solange eines offen ist, pausiert der Raum das Lernen und bestimmt nicht die Vorlauftemperatur.",
+          "motion_entity_ids": "Zeigt, ob der Raum genutzt wird (später für Absenkung pro Raum).",
+          "humidity_entity_ids": "Wird beim Raum angezeigt (später für den Schimmelschutz).",
+          "exclude_from_supply": "Für Räume aktivieren, die die Vorlauftemperatur nicht bestimmen sollen, z. B. ein Bad mit Fußbodenheizung oder ein Raum, der immer kalt ist."
+        }
+      },
+      "meter": {
+        "title": "Zählerdaten",
+        "description": "Optionale Daten deines Wärmezählers oder Versorgers. Damit wird gelernt, wie viel Wärme das Haus pro Grad verliert.",
+        "data": {
+          "heat_energy_entity_id": "Wärmezähler (optional)",
+          "meter_lag_days": "Verzögerung der Zählerdaten",
+          "expected_return_entity_id": "Erwartete Rücklauftemperatur (optional)",
+          "target_return_temperature": "Rücklaufziel"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Sensor mit dem Zählerstand in Wh, kWh, MWh, MJ oder GJ (ein steigender Gesamtwert).",
+          "meter_lag_days": "Tage, die die Zählerdaten zu spät kommen. 0 für einen lokalen Zähler, oft 1 für Daten vom Versorger.",
+          "expected_return_entity_id": "Die Rücklauftemperatur, die dein Versorger erwartet. Wird statt des festen Werts als Ziel verwendet.",
+          "target_return_temperature": "Wird verwendet, wenn keine erwartete Rücklauftemperatur gewählt ist."
+        }
+      },
+      "economy": {
+        "title": "Wirtschaftlichkeit und Absenkung",
+        "description": "Preise und Grenzen für die Nachtabsenkung. Preise in deiner Home-Assistant-Währung.",
+        "data": {
+          "heat_price": "Wärmepreis pro kWh",
+          "return_penalty": "Rücklauftarif",
+          "recovery_return_rise": "Rücklaufanstieg beim Aufheizen",
+          "min_saving": "Mindestersparnis",
+          "min_room_temperature": "Niedrigste Raumtemperatur",
+          "max_setback": "Größte Absenkung",
+          "night_start": "Nacht beginnt",
+          "night_end": "Nacht endet",
+          "manual_heat_loss_coefficient": "Wärmeverlustkoeffizient (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Dein variabler Preis pro kWh Wärme inkl. Abgaben.",
+          "return_penalty": "Zusatzkosten pro K Rücklauftemperatur pro MWh (Motivationstarif). 0, wenn dein Versorger keinen hat.",
+          "recovery_return_rise": "Um wie viele K die Rücklauftemperatur steigt, während das Haus nach einer Absenkung wieder aufheizt.",
+          "min_saving": "Eine Absenkung wird nur empfohlen, wenn sie pro Nacht mindestens so viel spart.",
+          "min_room_temperature": "Die Absenkung lässt die Räume nie darunter fallen (Schimmel und Komfort).",
+          "max_setback": "Größte Absenkung in K unter der Komforttemperatur.",
+          "night_end": "Zu dieser Zeit müssen die Räume wieder Komforttemperatur haben.",
+          "manual_heat_loss_coefficient": "0, um ihn aus den Zählerdaten zu lernen. Setze ihn, wenn du keine Zählerdaten hast oder den Wert kennst."
+        }
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Degree Dealer kann ein Dashboard in der Seitenleiste hinzufügen mit der Empfehlung, Vor- und Rücklauf, der Nachtabsenkung, dem Hausmodell und einem Abschnitt pro Raum. Du kannst es in der Oberfläche bearbeiten.",
+        "data": {
+          "dashboard": "Dashboard in der Seitenleiste anzeigen"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Vorlauf und Rücklauf müssen verschiedene Sensoren sein.",
+      "outdoor_required": "Wähle einen Außentemperatursensor oder eine Wetter-Entität.",
+      "no_areas": "Wähle mindestens einen Bereich.",
+      "room_empty": "Wähle mindestens ein Thermostat oder einen Temperatursensor."
+    }
+  },
+  "options": {
+    "step": {
+      "plant": {
+        "title": "Heizanlage",
+        "description": "Die Sensoren deiner Heizungsregelung (z. B. einer Fernwärmestation oder eines Kesselreglers).",
+        "data": {
+          "supply_temperature_entity_id": "Vorlauftemperatur",
+          "return_temperature_entity_id": "Rücklauftemperatur",
+          "outdoor_temperature_entity_id": "Außentemperatur (optional)",
+          "weather_entity_id": "Wetter (optional)",
+          "supply_reference_entity_id": "Vorlauf-Sollwert (optional)",
+          "supply_min_temperature": "Niedrigste Vorlauftemperatur",
+          "supply_max_temperature": "Höchste Vorlauftemperatur"
+        },
+        "data_description": {
+          "supply_temperature_entity_id": "Gemessene Vorlauftemperatur zu den Heizkörpern.",
+          "return_temperature_entity_id": "Gemessene Rücklauftemperatur von den Heizkörpern.",
+          "outdoor_temperature_entity_id": "Sensor mit der Außentemperatur. Dieser oder eine Wetter-Entität ist erforderlich.",
+          "weather_entity_id": "Wird für die Außentemperatur verwendet, wenn kein Außenfühler gewählt ist.",
+          "supply_reference_entity_id": "Die Vorlauftemperatur, die der Regler anstrebt. Die Empfehlung bezieht sich darauf; ohne ihn wird der gemessene Vorlauf verwendet.",
+          "supply_min_temperature": "Die Empfehlung geht nie darunter.",
+          "supply_max_temperature": "Die Empfehlung geht nie darüber."
+        }
+      },
+      "rooms": {
+        "title": "Räume",
+        "description": "Wähle die Bereiche mit beheizten Räumen. Die nächsten Seiten zeigen, was in jedem Bereich gefunden wurde, damit du es prüfen und anpassen kannst.",
+        "data": {
+          "areas": "Bereiche"
+        }
+      },
+      "room": {
+        "title": "Raum: {room}",
+        "description": "Gefunden in **{room}**. Prüfe die Entitäten und passe sie bei Bedarf an. Ein Raum braucht mindestens ein Thermostat oder einen Temperatursensor.",
+        "data": {
+          "climate_entity_ids": "Thermostate",
+          "temperature_entity_ids": "Temperatursensoren",
+          "valve_entity_ids": "Ventilbedarf",
+          "opening_entity_ids": "Fenster und Türen",
+          "motion_entity_ids": "Bewegung und Anwesenheit",
+          "humidity_entity_ids": "Feuchtigkeitssensoren",
+          "exclude_from_supply": "Für die Vorlauftemperatur ignorieren"
+        },
+        "data_description": {
+          "climate_entity_ids": "Heizkörperthermostate oder andere Climate-Entitäten im Raum.",
+          "temperature_entity_ids": "Der Mittelwert wird als Raumtemperatur verwendet. Ohne sie wird die eigene Temperatur der Thermostate verwendet.",
+          "valve_entity_ids": "Sensoren mit Ventilöffnung oder Heizbedarf in Prozent (0-100 %). Der höchste Wert wird verwendet. Ohne sie wird der Heiz-/Leerlaufzustand der Thermostate verwendet.",
+          "opening_entity_ids": "Solange eines offen ist, pausiert der Raum das Lernen und bestimmt nicht die Vorlauftemperatur.",
+          "motion_entity_ids": "Zeigt, ob der Raum genutzt wird (später für Absenkung pro Raum).",
+          "humidity_entity_ids": "Wird beim Raum angezeigt (später für den Schimmelschutz).",
+          "exclude_from_supply": "Für Räume aktivieren, die die Vorlauftemperatur nicht bestimmen sollen, z. B. ein Bad mit Fußbodenheizung oder ein Raum, der immer kalt ist."
+        }
+      },
+      "meter": {
+        "title": "Zählerdaten",
+        "description": "Optionale Daten deines Wärmezählers oder Versorgers. Damit wird gelernt, wie viel Wärme das Haus pro Grad verliert.",
+        "data": {
+          "heat_energy_entity_id": "Wärmezähler (optional)",
+          "meter_lag_days": "Verzögerung der Zählerdaten",
+          "expected_return_entity_id": "Erwartete Rücklauftemperatur (optional)",
+          "target_return_temperature": "Rücklaufziel"
+        },
+        "data_description": {
+          "heat_energy_entity_id": "Sensor mit dem Zählerstand in Wh, kWh, MWh, MJ oder GJ (ein steigender Gesamtwert).",
+          "meter_lag_days": "Tage, die die Zählerdaten zu spät kommen. 0 für einen lokalen Zähler, oft 1 für Daten vom Versorger.",
+          "expected_return_entity_id": "Die Rücklauftemperatur, die dein Versorger erwartet. Wird statt des festen Werts als Ziel verwendet.",
+          "target_return_temperature": "Wird verwendet, wenn keine erwartete Rücklauftemperatur gewählt ist."
+        }
+      },
+      "economy": {
+        "title": "Wirtschaftlichkeit und Absenkung",
+        "description": "Preise und Grenzen für die Nachtabsenkung. Preise in deiner Home-Assistant-Währung.",
+        "data": {
+          "heat_price": "Wärmepreis pro kWh",
+          "return_penalty": "Rücklauftarif",
+          "recovery_return_rise": "Rücklaufanstieg beim Aufheizen",
+          "min_saving": "Mindestersparnis",
+          "min_room_temperature": "Niedrigste Raumtemperatur",
+          "max_setback": "Größte Absenkung",
+          "night_start": "Nacht beginnt",
+          "night_end": "Nacht endet",
+          "manual_heat_loss_coefficient": "Wärmeverlustkoeffizient (W/K)"
+        },
+        "data_description": {
+          "heat_price": "Dein variabler Preis pro kWh Wärme inkl. Abgaben.",
+          "return_penalty": "Zusatzkosten pro K Rücklauftemperatur pro MWh (Motivationstarif). 0, wenn dein Versorger keinen hat.",
+          "recovery_return_rise": "Um wie viele K die Rücklauftemperatur steigt, während das Haus nach einer Absenkung wieder aufheizt.",
+          "min_saving": "Eine Absenkung wird nur empfohlen, wenn sie pro Nacht mindestens so viel spart.",
+          "min_room_temperature": "Die Absenkung lässt die Räume nie darunter fallen (Schimmel und Komfort).",
+          "max_setback": "Größte Absenkung in K unter der Komforttemperatur.",
+          "night_end": "Zu dieser Zeit müssen die Räume wieder Komforttemperatur haben.",
+          "manual_heat_loss_coefficient": "0, um ihn aus den Zählerdaten zu lernen. Setze ihn, wenn du keine Zählerdaten hast oder den Wert kennst."
+        }
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Degree Dealer kann ein Dashboard in der Seitenleiste hinzufügen mit der Empfehlung, Vor- und Rücklauf, der Nachtabsenkung, dem Hausmodell und einem Abschnitt pro Raum. Du kannst es in der Oberfläche bearbeiten.",
+        "data": {
+          "dashboard": "Dashboard in der Seitenleiste anzeigen"
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Vorlauf und Rücklauf müssen verschiedene Sensoren sein.",
+      "outdoor_required": "Wähle einen Außentemperatursensor oder eine Wetter-Entität.",
+      "no_areas": "Wähle mindestens einen Bereich.",
+      "room_empty": "Wähle mindestens ein Thermostat oder einen Temperatursensor."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Innentemperatur"
+      },
+      "heat_demand": {
+        "name": "Heizbedarf"
+      },
+      "supply_advice": {
+        "name": "Empfohlene Vorlauftemperatur"
+      },
+      "supply_return_difference": {
+        "name": "Spreizung (Vorlauf - Rücklauf)"
+      },
+      "return_excess": {
+        "name": "Rücklauf über Ziel"
+      },
+      "heat_loss_coefficient": {
+        "name": "Wärmeverlustkoeffizient"
+      },
+      "time_constant": {
+        "name": "Auskühlzeitkonstante"
+      },
+      "heat_up_rate": {
+        "name": "Aufheizrate"
+      },
+      "night_setback": {
+        "name": "Nachtabsenkung"
+      },
+      "learning_days": {
+        "name": "Gelernte Tage"
+      }
+    }
+  }
+}
