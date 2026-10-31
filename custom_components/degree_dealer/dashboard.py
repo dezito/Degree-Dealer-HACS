@@ -24,11 +24,15 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 from .const import (
+    CONF_CONTROL_MODE,
     CONF_OUTDOOR,
     CONF_RETURN,
+    CONF_RETURN_LIMIT,
     CONF_ROOMS,
     CONF_SUPPLY,
     CONF_SUPPLY_REFERENCE,
+    CONTROL_RETURN,
+    CONTROL_SUPPLY,
     DOMAIN,
     ROOM_AREA,
     ROOM_CLIMATES,
@@ -46,6 +50,7 @@ SENSOR_KEYS = (
     "indoor_temperature",
     "heat_demand",
     "supply_advice",
+    "return_limit_advice",
     "supply_return_difference",
     "return_excess",
     "heat_loss_coefficient",
@@ -103,23 +108,45 @@ def _read_more(texts: dict[str, str], key: str) -> dict[str, Any]:
     }
 
 
+def _tile(entity_id: str) -> dict[str, Any]:
+    card: dict[str, Any] = {"type": "tile", "entity": entity_id}
+    if entity_id.startswith("button."):
+        card["tap_action"] = {"action": "perform-action", "perform_action": "button.press", "target": {"entity_id": entity_id}}
+    return card
+
+
 def _tiles(entity_ids: list[str | None]) -> list[dict[str, Any]]:
-    return [{"type": "tile", "entity": entity_id} for entity_id in entity_ids if entity_id]
+    return [_tile(entity_id) for entity_id in entity_ids if entity_id]
 
 
 def _markdown(content: str) -> dict[str, Any]:
     return {"type": "markdown", "content": content, "grid_options": {"columns": "full"}}
 
 
-ADVICE = """\
+REASONS = (
+    "rooms_starved",
+    "valves_mostly_closed",
+    "valves_partly_closed",
+    "in_band",
+    "return_starved",
+    "starved_not_limited",
+    "above_target",
+    "at_target",
+    "at_limit",
+)
+ADVICE = (
+    """\
 {% set e = '<<advice>>' %}
 {% set action = state_attr(e, 'action') %}
 {% if action is none %}[[no_advice]]{% else %}
-**[[advice]]:** {% if action == 'raise' %}[[action_raise]]{% elif action == 'lower' %}[[action_lower]]{% else %}[[action_hold]]{% endif %} ({{ state_attr(e, 'delta') }} K → {{ states(e) }} °C)
+**[[advice]]:** {% if action == 'raise' %}[[action_raise_<<mode>>]]{% elif action == 'lower' %}[[action_lower_<<mode>>]]{% else %}[[action_hold_<<mode>>]]{% endif %} ({{ state_attr(e, 'current') }} °C → {{ states(e) }} °C)
 
-{% set reason = state_attr(e, 'reason') %}{% if reason == 'rooms_starved' %}[[reason_rooms_starved]]{% elif reason == 'valves_mostly_closed' %}[[reason_valves_mostly_closed]]{% elif reason == 'valves_partly_closed' %}[[reason_valves_partly_closed]]{% elif reason == 'at_limit' %}[[reason_at_limit]]{% else %}[[reason_in_band]]{% endif %}
+{% set reason = state_attr(e, 'reason') %}"""
+    + "".join(f"{{% {'if' if i == 0 else 'elif'} reason == '{reason}' %}}[[reason_{reason}]]" for i, reason in enumerate(REASONS))
+    + """{% endif %}
 
 [[key_room]]: {{ state_attr(e, 'key_room') }} ({{ state_attr(e, 'key_demand') }} %){% endif %}"""
+)
 
 SETBACK = """\
 {% set e = '<<setback>>' %}
@@ -150,14 +177,19 @@ SETBACK = """\
 {% endif %}"""
 
 MODEL = """\
-{% set e = '<<heat_loss>>' %}
-{% set source = state_attr(e, 'source') %}
+{% set e = '<<heat_loss>>' %}{% set source = state_attr(e, 'source') %}
+{% set h = '<<learning>>' %}{% set status = state_attr(h, 'history_status') %}
 | | |
 |---|---|
 | [[source]] | {% if source == 'manual' %}[[source_manual]]{% elif source == 'learnt' %}[[source_learnt]]{% else %}[[not_learnt]]{% endif %} |
 | [[days_used]] | {{ state_attr(e, 'days_used') }} |
 | [[base_load]] | {{ state_attr(e, 'base_load_kwh_per_day') if state_attr(e, 'base_load_kwh_per_day') is not none else '-' }} kWh |
-| [[r2]] | {{ state_attr(e, 'r2') if state_attr(e, 'r2') is not none else '-' }} |"""
+| [[r2]] | {{ state_attr(e, 'r2') if state_attr(e, 'r2') is not none else '-' }} |
+| [[history]] | {% if status == 'running' %}[[history_running]]{% elif status == 'done' %}[[history_done]]{% elif status == 'failed' %}[[history_failed]]{% elif status == 'no_recorder' %}[[history_no_recorder]]{% else %}-{% endif %} |
+{% if status == 'done' %}| [[history_first_day]] | {{ state_attr(h, 'history_first_day') or '-' }} |
+| [[history_statistics_days]] | {{ state_attr(h, 'history_statistics_days') }} |
+| [[history_state_days]] | {{ state_attr(h, 'history_state_days') }} |
+{% endif %}"""
 
 ROOM = """\
 {% set r = (state_attr('<<indoor>>', 'rooms') or []) | selectattr('area_id', 'eq', '<<area>>') | list | first %}
@@ -183,29 +215,36 @@ def build_dashboard(
     plant: dict[str, str | None],
     rooms: list[dict[str, Any]],
     currency: str,
+    control_mode: str = CONTROL_RETURN,
 ) -> dict[str, Any]:
     """Lovelace config of the dashboard (pure, no Home Assistant needed).
 
-    sensors: Degree Dealer sensor key -> entity id, plant: supply/return/outdoor/reference
-    entity ids, rooms: the configured rooms with their area name under "name".
+    sensors: Degree Dealer entity key -> entity id (sensors and the learn_from_history button),
+    plant: supply/return/outdoor/reference/return_limit entity ids, rooms: the configured rooms
+    with their area name under "name", control_mode: what the controller can control.
     """
+    advice = {CONTROL_SUPPLY: sensors.get("supply_advice"), CONTROL_RETURN: sensors.get("return_limit_advice")}.get(control_mode)
+    controlled = {CONTROL_SUPPLY: plant.get("reference"), CONTROL_RETURN: plant.get("return_limit")}.get(control_mode)
     values = {
-        "advice": sensors.get("supply_advice") or "",
+        "advice": advice or "",
+        "mode": control_mode,
         "setback": sensors.get("night_setback") or "",
         "heat_loss": sensors.get("heat_loss_coefficient") or "",
+        "learning": sensors.get("learning_days") or "",
         "indoor": sensors.get("indoor_temperature") or "",
         "currency": currency,
     }
     status = [
         _heading(texts["section_status"], "mdi:radiator"),
         _read_more(texts, "help_status"),
-        *_tiles([sensors.get("indoor_temperature"), sensors.get("supply_advice"), sensors.get("heat_demand"), sensors.get("return_excess"), sensors.get("supply_return_difference")]),
+        *_tiles([sensors.get("indoor_temperature"), advice, sensors.get("heat_demand"), sensors.get("return_excess"), sensors.get("supply_return_difference")]),
         *_tiles([plant.get("supply"), plant.get("return"), plant.get("outdoor")]),
-        _markdown(_fill(ADVICE, texts, **values)),
     ]
+    if advice:
+        status.append(_markdown(_fill(ADVICE, texts, **values)))
     graph_entities = [
         entity_id
-        for entity_id in (plant.get("supply"), plant.get("return"), sensors.get("supply_advice"), plant.get("reference"), plant.get("outdoor"))
+        for entity_id in (plant.get("supply"), plant.get("return"), advice, controlled, plant.get("outdoor"))
         if entity_id
     ]
     supply_return = [
@@ -222,7 +261,7 @@ def build_dashboard(
     model = [
         _heading(texts["section_model"], "mdi:home-analytics"),
         _read_more(texts, "help_model"),
-        *_tiles([sensors.get(key) for key in ("heat_loss_coefficient", "time_constant", "heat_up_rate", "learning_days")]),
+        *_tiles([sensors.get(key) for key in ("heat_loss_coefficient", "time_constant", "heat_up_rate", "learning_days", "learn_from_history")]),
         _markdown(_fill(MODEL, texts, **values)),
     ]
     overview = {
@@ -327,11 +366,13 @@ async def async_setup_dashboard(hass: HomeAssistant, entry: ConfigEntry, options
 
     registry = er.async_get(hass)
     sensors = {key: registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_{key}") for key in SENSOR_KEYS}
+    sensors["learn_from_history"] = registry.async_get_entity_id("button", DOMAIN, f"{entry.entry_id}_learn_from_history")
     plant = {
         "supply": options.get(CONF_SUPPLY),
         "return": options.get(CONF_RETURN),
         "outdoor": options.get(CONF_OUTDOOR),
         "reference": options.get(CONF_SUPPLY_REFERENCE),
+        "return_limit": options.get(CONF_RETURN_LIMIT),
     }
     areas = ar.async_get(hass)
     rooms = []
@@ -339,7 +380,7 @@ async def async_setup_dashboard(hass: HomeAssistant, entry: ConfigEntry, options
         area = areas.async_get_area(room[ROOM_AREA])
         rooms.append({**room, "name": area.name if area else room[ROOM_AREA]})
     texts = await hass.async_add_executor_job(load_texts, dashboard_language(hass.config.language))
-    generated = build_dashboard(texts, sensors, plant, rooms, hass.config.currency)
+    generated = build_dashboard(texts, sensors, plant, rooms, hass.config.currency, options[CONF_CONTROL_MODE])
 
     store = custom_store(hass, entry.entry_id)
     stored = await store.async_load()

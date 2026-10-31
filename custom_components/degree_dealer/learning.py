@@ -26,8 +26,11 @@ HEATING_MIN_RISE = 0.3  # K
 HEAT_UP_RATE_RANGE = (0.05, 10.0)  # K/h
 
 COLD_MARGIN = 0.5  # K below the setpoint before a room counts as cold
-MAX_DAYS = 180
+MAX_DAYS = 1100  # about three years: the history goes as far back as the recorder has data
 MIN_DAY_SAMPLES = 200  # of 288 at one sample per 5 minutes
+# warmer days are left out of the heat loss fit: sun and people heat the house, so the
+# energy no longer follows the indoor-outdoor difference
+HEATING_LIMIT = 12.0  # °C daily mean outdoor temperature
 
 
 def _time(value: str | None) -> datetime | None:
@@ -182,6 +185,8 @@ class HouseLearner:
     sums: dict[str, float] = field(default_factory=dict)
     counts: dict[str, int] = field(default_factory=dict)
     comfort: float | None = None
+    # result of learning from the recorder history (None = not done yet)
+    history: dict[str, Any] | None = None
 
     def room(self, entity_id: str) -> RoomLearner:
         return self.rooms.setdefault(entity_id, RoomLearner())
@@ -218,6 +223,8 @@ class HouseLearner:
         for day, record in sorted(by_date.items()):
             if record.get("samples", 0) < MIN_DAY_SAMPLES or record.get("indoor") is None or record.get("outdoor") is None:
                 continue
+            if record["outdoor"] >= HEATING_LIMIT:
+                continue
             end = by_date.get(day + timedelta(days=lag_days))
             previous = by_date.get(day + timedelta(days=lag_days - 1))
             if not end or not previous or end.get("meter_kwh") is None or previous.get("meter_kwh") is None:
@@ -243,6 +250,7 @@ class HouseLearner:
             "sums": self.sums,
             "counts": self.counts,
             "comfort": self.comfort,
+            "history": self.history,
         }
 
     @classmethod
@@ -254,4 +262,5 @@ class HouseLearner:
             sums=dict(data.get("sums", {})),
             counts=dict(data.get("counts", {})),
             comfort=data.get("comfort"),
+            history=data.get("history"),
         )

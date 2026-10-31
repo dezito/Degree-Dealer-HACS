@@ -78,7 +78,9 @@ class RoomDemand:
 
 
 @dataclass(frozen=True, slots=True)
-class SupplyAdvice:
+class Advice:
+    """Advice for the value the heating controller can control (supply or return limit)."""
+
     action: str  # raise / lower / hold
     target: float
     delta: float
@@ -87,19 +89,37 @@ class SupplyAdvice:
     key_demand: float | None
 
 
-def advise_supply(base: float | None, rooms: list[RoomDemand], supply_min: float, supply_max: float) -> SupplyAdvice | None:
+def _rooms_in_use(rooms: list[RoomDemand]) -> list[RoomDemand]:
+    return [room for room in rooms if not room.exclude and room.demand is not None]
+
+
+def _starved(rooms: list[RoomDemand]) -> list[RoomDemand]:
+    """Rooms that have been cold for a while with the valve (almost) fully open."""
+    return [room for room in rooms if room.cold_minutes >= STARVED_MINUTES and (room.demand or 0.0) >= DEMAND_HIGH]
+
+
+def _advice(base: float, delta: float, reason: str, minimum: float, maximum: float, key: RoomDemand) -> Advice:
+    target = min(max(base + delta, minimum), maximum)
+    if delta and target == base:
+        reason = "at_limit"
+    delta = round(target - base, 1)
+    action = "raise" if delta > 0 else "lower" if delta < 0 else "hold"
+    return Advice(action, round(target, 1), delta, reason, key.name, round(key.demand or 0.0, 1))
+
+
+def advise_supply(base: float | None, rooms: list[RoomDemand], supply_min: float, supply_max: float) -> Advice | None:
     """Lowest supply temperature that keeps the most demanding room warm.
 
+    For plants that control the supply (mixing loop, heat exchanger, boiler, heat pump).
     The valves should be mostly open: then the water gives off most of its heat before it
     returns. Mostly closed valves mean the supply is hotter than the house needs.
     """
-    rooms = [room for room in rooms if not room.exclude and room.demand is not None]
+    rooms = _rooms_in_use(rooms)
     if base is None or not rooms:
         return None
     key = max(rooms, key=lambda room: room.demand or 0.0)
     key_demand = key.demand or 0.0
-    starved = [room for room in rooms if room.cold_minutes >= STARVED_MINUTES and (room.demand or 0.0) >= DEMAND_HIGH]
-    if starved:
+    if starved := _starved(rooms):
         delta, reason = (2.0 if len(starved) > 1 else 1.0), "rooms_starved"
     elif key_demand < DEMAND_VERY_LOW:
         delta, reason = -2.0, "valves_mostly_closed"
@@ -107,12 +127,43 @@ def advise_supply(base: float | None, rooms: list[RoomDemand], supply_min: float
         delta, reason = -1.0, "valves_partly_closed"
     else:
         delta, reason = 0.0, "in_band"
-    target = min(max(base + delta, supply_min), supply_max)
-    if delta and target == base:
-        reason = "at_limit"
-    delta = round(target - base, 1)
-    action = "raise" if delta > 0 else "lower" if delta < 0 else "hold"
-    return SupplyAdvice(action, round(target, 1), delta, reason, key.name, round(key_demand, 1))
+    return _advice(base, delta, reason, supply_min, supply_max, key)
+
+
+LIMITER_MARGIN = 1.0  # K: the return limiter counts as active this close to the limit
+
+
+def advise_return_limit(
+    base: float | None,
+    return_temperature: float | None,
+    rooms: list[RoomDemand],
+    target: float | None,
+    limit_min: float,
+    limit_max: float,
+) -> Advice | None:
+    """Lowest return limit that still lets every room get enough heat.
+
+    For directly connected district heating, where the supply comes from the utility and the
+    controller can only limit the return temperature by throttling the flow. A lower limit
+    makes the water give off more heat before it leaves the house; too low and the flow is cut
+    so much that rooms go cold.
+    """
+    rooms = _rooms_in_use(rooms)
+    if base is None or not rooms:
+        return None
+    key = max(rooms, key=lambda room: room.demand or 0.0)
+    limiting = return_temperature is not None and return_temperature >= base - LIMITER_MARGIN
+    if starved := _starved(rooms):
+        if limiting:
+            delta, reason = (2.0 if len(starved) > 1 else 1.0), "return_starved"
+        else:
+            # the limiter is not holding the flow back: a higher limit would not help
+            delta, reason = 0.0, "starved_not_limited"
+    elif target is not None and base > target + 0.5:
+        delta, reason = -1.0, "above_target"
+    else:
+        delta, reason = 0.0, "at_target"
+    return _advice(base, delta, reason, limit_min, limit_max, key)
 
 
 @dataclass(frozen=True, slots=True)

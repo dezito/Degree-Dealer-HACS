@@ -36,6 +36,11 @@ alongside implementing the request. Point out assumptions that look wrong.
   together and keep the keys identical.
 - When the dashboard changes, check that each section's "Read more" text
   (`help_*` in `texts/`) still covers the entities and functions shown in it.
+- Learning must go through `coordinator.snapshot()` + `coordinator.learn()`, so the
+  history replay (history.py) and the live updates learn the same way.
+- Control modes: `return` (directly connected district heating, only a return limit
+  can be set; default), `supply` (mixing loop, heat exchanger, boiler, heat pump) and
+  `none`. Advice logic is in `model.advise_return_limit` / `model.advise_supply`.
 - Rooms are Home Assistant areas. `discovery.py` pre-fills each room with the
   area's thermostats, temperature, valve, window/door, motion and humidity
   entities; the user can adjust them in the flow.
@@ -49,7 +54,11 @@ custom_components/degree_dealer/
 ├── dashboard.py     Generated sidebar dashboard (built-in cards only), editable in the UI
 ├── texts/           Dashboard texts per language ([[key]] in the templates)
 ├── discovery.py     Finds the usable entities of an area
-├── coordinator.py   Reads states every 5 min, feeds learning, builds the data
+├── coordinator.py   snapshot() reads states (live or history), learn() feeds learning,
+│                    calculate() builds the data every 5 min
+├── history.py       First start / button: statistics + replay of recorded states
+├── button.py        Learn from history
+├── entity.py        Base entity (device, translation key)
 ├── learning.py      Stored learning: daily records, time constant, heat-up rate
 ├── model.py         Pure maths: heat loss fit, supply advice, setback economics
 └── sensor.py        The published sensors

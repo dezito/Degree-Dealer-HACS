@@ -10,6 +10,7 @@ import pytest
 from custom_components.degree_dealer.model import (
     RoomDemand,
     SetbackInputs,
+    advise_return_limit,
     advise_supply,
     cooling_time_constant,
     fit_heat_loss,
@@ -69,6 +70,26 @@ def test_supply_advice_holds_in_band_and_at_limit() -> None:
     assert at_limit is not None
     assert (at_limit.action, at_limit.reason) == ("hold", "at_limit")
     assert advise_supply(None, [RoomDemand("Living", 10)], 20, 80) is None
+
+
+def test_return_limit_raised_only_when_the_limiter_starves_a_room() -> None:
+    starved = [RoomDemand("Living", 100, cold_minutes=45)]
+    # return at the limit: the limiter holds the flow back
+    advice = advise_return_limit(35, 34.5, starved, 30, 20, 60)
+    assert advice is not None and (advice.action, advice.target, advice.reason) == ("raise", 36, "return_starved")
+    # return well below the limit: a higher limit would not help
+    advice = advise_return_limit(35, 28, starved, 30, 20, 60)
+    assert advice is not None and (advice.action, advice.reason) == ("hold", "starved_not_limited")
+
+
+def test_return_limit_lowered_towards_the_target() -> None:
+    rooms = [RoomDemand("Living", 60)]
+    advice = advise_return_limit(40, 38, rooms, 35, 20, 60)
+    assert advice is not None and (advice.action, advice.target, advice.reason) == ("lower", 39, "above_target")
+    advice = advise_return_limit(35, 33, rooms, 35, 20, 60)
+    assert advice is not None and (advice.action, advice.reason) == ("hold", "at_target")
+    advice = advise_return_limit(20, 19, rooms, 15, 20, 60)
+    assert advice is not None and (advice.action, advice.reason) == ("hold", "at_limit")
 
 
 def _inputs(**overrides: float) -> SetbackInputs:

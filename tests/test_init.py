@@ -13,7 +13,12 @@ def _state(hass: HomeAssistant, entity_id: str):
     return state
 
 
+def _supply_mode(hass: HomeAssistant, entry) -> None:
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "control_mode": "supply"})
+
+
 async def test_sensors_from_the_rooms(hass: HomeAssistant, entry) -> None:
+    _supply_mode(hass, entry)
     set_plant(hass, supply=45, ret=33, outdoor=5)
     set_climate(hass, "climate.living_trv", 20.4, 21.0, "heating")
     hass.states.async_set("sensor.living_temperature", "20.0")
@@ -40,6 +45,9 @@ async def test_sensors_from_the_rooms(hass: HomeAssistant, entry) -> None:
     assert float(advice.state) == 43.0
     assert advice.attributes["action"] == "lower"
     assert advice.attributes["key_room"] == "Living room"
+    assert hass.states.get("sensor.degree_dealer_recommended_return_limit") is None
+    # no recorder in this test: it learns from now on
+    assert _state(hass, "sensor.degree_dealer_days_learnt").attributes["history_status"] == "no_recorder"
 
     assert float(_state(hass, "sensor.degree_dealer_cooling_supply_return").state) == 12.0
     assert float(_state(hass, "sensor.degree_dealer_return_above_target").state) == -2.0
@@ -49,7 +57,34 @@ async def test_sensors_from_the_rooms(hass: HomeAssistant, entry) -> None:
     assert "heat_loss_coefficient" in setback.attributes["missing"]
 
 
+async def test_return_limit_advice_for_direct_district_heating(hass: HomeAssistant, entry) -> None:
+    """The default control mode: only the return can be limited."""
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "return_limit_entity_id": "number.ecl_return_limit"})
+    set_plant(hass, supply=70, ret=38, outdoor=5)
+    hass.states.async_set("number.ecl_return_limit", "40")
+    set_climate(hass, "climate.living_trv", 21.0, 21.0, "idle")
+    hass.states.async_set("sensor.living_heating_power", "40", {"unit_of_measurement": "%"})
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.degree_dealer_recommended_supply_temperature") is None
+    advice = _state(hass, "sensor.degree_dealer_recommended_return_limit")
+    # the limit (40) is above the target (35): lower it so the water gives off more heat
+    assert float(advice.state) == 39.0
+    assert (advice.attributes["action"], advice.attributes["reason"], advice.attributes["current"]) == ("lower", "above_target", 40.0)
+
+
+async def test_learn_from_history_button(hass: HomeAssistant, entry) -> None:
+    set_plant(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.services.async_call("button", "press", {"entity_id": "button.degree_dealer_learn_from_history"}, blocking=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.runtime_data.learner.history["status"] == "no_recorder"
+    assert entry.runtime_data.history_running is False
+
+
 async def test_open_window_keeps_the_room_out_of_the_supply_advice(hass: HomeAssistant, entry) -> None:
+    _supply_mode(hass, entry)
     set_plant(hass)
     set_climate(hass, "climate.living_trv", 19.0, 21.0, "heating")
     set_climate(hass, "climate.bath_trv", 22.0, 24.0, "heating")

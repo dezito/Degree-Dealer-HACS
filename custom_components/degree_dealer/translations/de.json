@@ -10,12 +10,16 @@
       },
       "plant": {
         "title": "Heizanlage",
-        "description": "Die Sensoren deiner Heizungsregelung (z. B. einer Fernwärmestation oder eines Kesselreglers).",
+        "description": "Die Sensoren deiner Heizungsregelung und was sie regeln kann. Direkt angeschlossene Fernwärme kann meist nur die Rücklauftemperatur begrenzen; ein Mischkreis, Wärmetauscher, Kessel oder eine Wärmepumpe regelt den Vorlauf.",
         "data": {
           "supply_temperature_entity_id": "Vorlauftemperatur",
           "return_temperature_entity_id": "Rücklauftemperatur",
           "outdoor_temperature_entity_id": "Außentemperatur (optional)",
           "weather_entity_id": "Wetter (optional)",
+          "control_mode": "Was der Regler regeln kann",
+          "return_limit_entity_id": "Rücklauftemperaturgrenze (optional)",
+          "return_limit_min_temperature": "Niedrigste Rücklaufgrenze",
+          "return_limit_max_temperature": "Höchste Rücklaufgrenze",
           "supply_reference_entity_id": "Vorlauf-Sollwert (optional)",
           "supply_min_temperature": "Niedrigste Vorlauftemperatur",
           "supply_max_temperature": "Höchste Vorlauftemperatur"
@@ -25,9 +29,13 @@
           "return_temperature_entity_id": "Gemessene Rücklauftemperatur von den Heizkörpern.",
           "outdoor_temperature_entity_id": "Sensor mit der Außentemperatur. Dieser oder eine Wetter-Entität ist erforderlich.",
           "weather_entity_id": "Wird für die Außentemperatur verwendet, wenn kein Außenfühler gewählt ist.",
-          "supply_reference_entity_id": "Die Vorlauftemperatur, die der Regler anstrebt. Die Empfehlung bezieht sich darauf; ohne ihn wird der gemessene Vorlauf verwendet.",
-          "supply_min_temperature": "Die Empfehlung geht nie darunter.",
-          "supply_max_temperature": "Die Empfehlung geht nie darüber."
+          "control_mode": "Bestimmt, welche Empfehlung Degree Dealer gibt.",
+          "return_limit_entity_id": "Die aktuelle Rücklaufgrenze des Reglers (z. B. der Rücklauf-Sollwert). Die Empfehlung bezieht sich darauf; ohne sie wird der gemessene Rücklauf verwendet. Nur bei Rücklaufbegrenzung.",
+          "return_limit_min_temperature": "Die Empfehlung geht nie darunter.",
+          "return_limit_max_temperature": "Die Empfehlung geht nie darüber.",
+          "supply_reference_entity_id": "Die Vorlauftemperatur, die der Regler anstrebt. Die Empfehlung bezieht sich darauf; ohne ihn wird der gemessene Vorlauf verwendet. Nur bei Vorlaufregelung.",
+          "supply_min_temperature": "Die Empfehlung geht nie darunter (Vorlaufregelung).",
+          "supply_max_temperature": "Die Empfehlung geht nie darüber (Vorlaufregelung)."
         }
       },
       "rooms": {
@@ -47,7 +55,7 @@
           "opening_entity_ids": "Fenster und Türen",
           "motion_entity_ids": "Bewegung und Anwesenheit",
           "humidity_entity_ids": "Feuchtigkeitssensoren",
-          "exclude_from_supply": "Für die Vorlauftemperatur ignorieren"
+          "exclude_from_supply": "Aus der Empfehlung heraushalten"
         },
         "data_description": {
           "climate_entity_ids": "Heizkörperthermostate oder andere Climate-Entitäten im Raum.",
@@ -56,7 +64,7 @@
           "opening_entity_ids": "Solange eines offen ist, pausiert der Raum das Lernen und bestimmt nicht die Vorlauftemperatur.",
           "motion_entity_ids": "Zeigt, ob der Raum genutzt wird (später für Absenkung pro Raum).",
           "humidity_entity_ids": "Wird beim Raum angezeigt (später für den Schimmelschutz).",
-          "exclude_from_supply": "Für Räume aktivieren, die die Vorlauftemperatur nicht bestimmen sollen, z. B. ein Bad mit Fußbodenheizung oder ein Raum, der immer kalt ist."
+          "exclude_from_supply": "Für Räume aktivieren, die die Empfehlung (Vorlauf oder Rücklaufgrenze) nicht bestimmen sollen, z. B. ein Bad mit Fußbodenheizung oder ein Raum, der immer kalt ist."
         }
       },
       "meter": {
@@ -119,12 +127,16 @@
     "step": {
       "plant": {
         "title": "Heizanlage",
-        "description": "Die Sensoren deiner Heizungsregelung (z. B. einer Fernwärmestation oder eines Kesselreglers).",
+        "description": "Die Sensoren deiner Heizungsregelung und was sie regeln kann. Direkt angeschlossene Fernwärme kann meist nur die Rücklauftemperatur begrenzen; ein Mischkreis, Wärmetauscher, Kessel oder eine Wärmepumpe regelt den Vorlauf.",
         "data": {
           "supply_temperature_entity_id": "Vorlauftemperatur",
           "return_temperature_entity_id": "Rücklauftemperatur",
           "outdoor_temperature_entity_id": "Außentemperatur (optional)",
           "weather_entity_id": "Wetter (optional)",
+          "control_mode": "Was der Regler regeln kann",
+          "return_limit_entity_id": "Rücklauftemperaturgrenze (optional)",
+          "return_limit_min_temperature": "Niedrigste Rücklaufgrenze",
+          "return_limit_max_temperature": "Höchste Rücklaufgrenze",
           "supply_reference_entity_id": "Vorlauf-Sollwert (optional)",
           "supply_min_temperature": "Niedrigste Vorlauftemperatur",
           "supply_max_temperature": "Höchste Vorlauftemperatur"
@@ -134,9 +146,13 @@
           "return_temperature_entity_id": "Gemessene Rücklauftemperatur von den Heizkörpern.",
           "outdoor_temperature_entity_id": "Sensor mit der Außentemperatur. Dieser oder eine Wetter-Entität ist erforderlich.",
           "weather_entity_id": "Wird für die Außentemperatur verwendet, wenn kein Außenfühler gewählt ist.",
-          "supply_reference_entity_id": "Die Vorlauftemperatur, die der Regler anstrebt. Die Empfehlung bezieht sich darauf; ohne ihn wird der gemessene Vorlauf verwendet.",
-          "supply_min_temperature": "Die Empfehlung geht nie darunter.",
-          "supply_max_temperature": "Die Empfehlung geht nie darüber."
+          "control_mode": "Bestimmt, welche Empfehlung Degree Dealer gibt.",
+          "return_limit_entity_id": "Die aktuelle Rücklaufgrenze des Reglers (z. B. der Rücklauf-Sollwert). Die Empfehlung bezieht sich darauf; ohne sie wird der gemessene Rücklauf verwendet. Nur bei Rücklaufbegrenzung.",
+          "return_limit_min_temperature": "Die Empfehlung geht nie darunter.",
+          "return_limit_max_temperature": "Die Empfehlung geht nie darüber.",
+          "supply_reference_entity_id": "Die Vorlauftemperatur, die der Regler anstrebt. Die Empfehlung bezieht sich darauf; ohne ihn wird der gemessene Vorlauf verwendet. Nur bei Vorlaufregelung.",
+          "supply_min_temperature": "Die Empfehlung geht nie darunter (Vorlaufregelung).",
+          "supply_max_temperature": "Die Empfehlung geht nie darüber (Vorlaufregelung)."
         }
       },
       "rooms": {
@@ -156,7 +172,7 @@
           "opening_entity_ids": "Fenster und Türen",
           "motion_entity_ids": "Bewegung und Anwesenheit",
           "humidity_entity_ids": "Feuchtigkeitssensoren",
-          "exclude_from_supply": "Für die Vorlauftemperatur ignorieren"
+          "exclude_from_supply": "Aus der Empfehlung heraushalten"
         },
         "data_description": {
           "climate_entity_ids": "Heizkörperthermostate oder andere Climate-Entitäten im Raum.",
@@ -165,7 +181,7 @@
           "opening_entity_ids": "Solange eines offen ist, pausiert der Raum das Lernen und bestimmt nicht die Vorlauftemperatur.",
           "motion_entity_ids": "Zeigt, ob der Raum genutzt wird (später für Absenkung pro Raum).",
           "humidity_entity_ids": "Wird beim Raum angezeigt (später für den Schimmelschutz).",
-          "exclude_from_supply": "Für Räume aktivieren, die die Vorlauftemperatur nicht bestimmen sollen, z. B. ein Bad mit Fußbodenheizung oder ein Raum, der immer kalt ist."
+          "exclude_from_supply": "Für Räume aktivieren, die die Empfehlung (Vorlauf oder Rücklaufgrenze) nicht bestimmen sollen, z. B. ein Bad mit Fußbodenheizung oder ein Raum, der immer kalt ist."
         }
       },
       "meter": {
@@ -224,7 +240,21 @@
       "room_empty": "Wähle mindestens ein Thermostat oder einen Temperatursensor."
     }
   },
+  "selector": {
+    "control_mode": {
+      "options": {
+        "return": "Rücklauftemperaturgrenze (direkt angeschlossene Fernwärme)",
+        "supply": "Vorlauftemperatur (Mischkreis, Wärmetauscher, Kessel, Wärmepumpe)",
+        "none": "Nichts: nur überwachen und Absenkung empfehlen"
+      }
+    }
+  },
   "entity": {
+    "button": {
+      "learn_from_history": {
+        "name": "Aus Verlauf lernen"
+      }
+    },
     "sensor": {
       "indoor_temperature": {
         "name": "Innentemperatur"
@@ -234,6 +264,9 @@
       },
       "supply_advice": {
         "name": "Empfohlene Vorlauftemperatur"
+      },
+      "return_limit_advice": {
+        "name": "Empfohlene Rücklaufgrenze"
       },
       "supply_return_difference": {
         "name": "Spreizung (Vorlauf - Rücklauf)"

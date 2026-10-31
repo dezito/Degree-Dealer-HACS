@@ -12,6 +12,7 @@ from homeassistant.helpers import area_registry as ar, selector
 
 from .const import (
     CONF_AREAS,
+    CONF_CONTROL_MODE,
     CONF_DASHBOARD,
     CONF_EXPECTED_RETURN,
     CONF_HEAT_ENERGY,
@@ -26,6 +27,9 @@ from .const import (
     CONF_OUTDOOR,
     CONF_RECOVERY_RETURN_RISE,
     CONF_RETURN,
+    CONF_RETURN_LIMIT,
+    CONF_RETURN_LIMIT_MAX,
+    CONF_RETURN_LIMIT_MIN,
     CONF_RETURN_PENALTY,
     CONF_ROOMS,
     CONF_SUPPLY,
@@ -34,6 +38,7 @@ from .const import (
     CONF_SUPPLY_REFERENCE,
     CONF_TARGET_RETURN,
     CONF_WEATHER,
+    CONTROL_MODES,
     DEFAULT_NAME,
     DOMAIN,
     ECONOMY_KEYS,
@@ -103,6 +108,16 @@ class _HeatingSteps:
                 vol.Required(CONF_RETURN, description=_suggested(options, CONF_RETURN)): _entity("sensor"),
                 vol.Optional(CONF_OUTDOOR, description=_suggested(options, CONF_OUTDOOR)): _entity("sensor"),
                 vol.Optional(CONF_WEATHER, description=_suggested(options, CONF_WEATHER)): _entity("weather"),
+                vol.Required(CONF_CONTROL_MODE, default=options[CONF_CONTROL_MODE]): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=list(CONTROL_MODES), translation_key=CONF_CONTROL_MODE, mode=selector.SelectSelectorMode.LIST
+                    )
+                ),
+                vol.Optional(CONF_RETURN_LIMIT, description=_suggested(options, CONF_RETURN_LIMIT)): _entity(
+                    ["sensor", "number", "input_number"]
+                ),
+                vol.Required(CONF_RETURN_LIMIT_MIN, default=options[CONF_RETURN_LIMIT_MIN]): _number(10, 80, 1, "°C"),
+                vol.Required(CONF_RETURN_LIMIT_MAX, default=options[CONF_RETURN_LIMIT_MAX]): _number(15, 90, 1, "°C"),
                 vol.Optional(CONF_SUPPLY_REFERENCE, description=_suggested(options, CONF_SUPPLY_REFERENCE)): _entity(
                     ["sensor", "number", "input_number"]
                 ),

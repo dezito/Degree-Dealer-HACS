@@ -1,6 +1,11 @@
-"""Reads the heating entities, learns the house and calculates the advice every 5 minutes."""
+"""Reads the heating entities, learns the house and calculates the advice every 5 minutes.
+
+Reading (``snapshot``) and learning (``learn``) take a state getter, so the same code learns
+from the live states and from recorded history (history.py).
+"""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, time
 import logging
@@ -8,13 +13,14 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_CONTROL_MODE,
     CONF_EXPECTED_RETURN,
     CONF_HEAT_ENERGY,
     CONF_HEAT_PRICE,
@@ -28,6 +34,9 @@ from .const import (
     CONF_OUTDOOR,
     CONF_RECOVERY_RETURN_RISE,
     CONF_RETURN,
+    CONF_RETURN_LIMIT,
+    CONF_RETURN_LIMIT_MAX,
+    CONF_RETURN_LIMIT_MIN,
     CONF_RETURN_PENALTY,
     CONF_ROOMS,
     CONF_SUPPLY,
@@ -36,6 +45,8 @@ from .const import (
     CONF_SUPPLY_REFERENCE,
     CONF_TARGET_RETURN,
     CONF_WEATHER,
+    CONTROL_RETURN,
+    CONTROL_SUPPLY,
     DEFAULT_HEAT_UP_RATE,
     DOMAIN,
     OCCUPIED_MINUTES,
@@ -54,11 +65,12 @@ from .const import (
 )
 from .learning import HouseLearner
 from .model import (
+    Advice,
     HeatLossFit,
     RoomDemand,
     SetbackInputs,
     SetbackOption,
-    SupplyAdvice,
+    advise_return_limit,
     advise_supply,
     fit_heat_loss,
     in_window,
@@ -71,6 +83,8 @@ _LOGGER = logging.getLogger(__name__)
 TO_KWH = {"Wh": 0.001, "kWh": 1.0, "MWh": 1000.0, "GJ": 277.778, "MJ": 0.277778}
 HVAC_ACTION_DEMAND = {"heating": 100.0, "preheating": 100.0, "idle": 0.0, "off": 0.0}
 
+StateGetter = Callable[[str], State | None]
+
 
 def _mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
@@ -78,6 +92,30 @@ def _mean(values: list[float]) -> float | None:
 
 def _round(value: float | None, digits: int = 1) -> float | None:
     return None if value is None else round(value, digits)
+
+
+def _number(get: StateGetter, entity_id: str | None, attribute: str | None = None) -> float | None:
+    if not entity_id or (state := get(entity_id)) is None:
+        return None
+    value = state.attributes.get(attribute) if attribute else state.state
+    if value in (None, STATE_UNKNOWN, STATE_UNAVAILABLE):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _energy_kwh(get: StateGetter, entity_id: str | None) -> float | None:
+    value = _number(get, entity_id)
+    if value is None or (state := get(entity_id or "")) is None:
+        return None
+    factor = TO_KWH.get(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "kWh"))
+    return None if factor is None else value * factor
+
+
+def _parse_time(value: str) -> time:
+    return time.fromisoformat(value)
 
 
 @dataclass
@@ -88,10 +126,20 @@ class RoomReading:
     temperature: float | None = None
     setpoint: float | None = None
     demand: float | None = None
-    heating_on: bool = False
     window_open: bool = False
     last_motion: datetime | None = None
     humidity: float | None = None
+
+
+@dataclass
+class Snapshot:
+    """Everything read at one moment."""
+
+    outdoor: float | None
+    supply: float | None
+    return_temperature: float | None
+    meter_kwh: float | None
+    rooms: list[tuple[dict[str, Any], RoomReading]]
 
 
 @dataclass
@@ -134,9 +182,11 @@ class DegreeDealerData:
     outdoor: float | None = None
     supply: float | None = None
     return_temperature: float | None = None
-    supply_base: float | None = None
+    control_mode: str = CONTROL_RETURN
+    # current value of what is controlled (reference/limit entity, else the measured value)
+    advice_base: float | None = None
     rooms: list[RoomStatus] = field(default_factory=list)
-    advice: SupplyAdvice | None = None
+    advice: Advice | None = None
     return_target: float | None = None
     return_target_source: str | None = None
     heat_loss: HeatLossFit | None = None
@@ -151,14 +201,11 @@ class DegreeDealerData:
     setback_options: list[SetbackOption] = field(default_factory=list)
     setback_missing: list[str] = field(default_factory=list)
     learning_days: int = 0
+    history: dict[str, Any] = field(default_factory=dict)
 
     @property
     def key_demand(self) -> float | None:
         return self.advice.key_demand if self.advice else None
-
-
-def _parse_time(value: str) -> time:
-    return time.fromisoformat(value)
 
 
 class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
@@ -169,6 +216,8 @@ class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
         self.entry = entry
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
         self.learner = HouseLearner()
+        # while history is replayed into a new learner, the live samples are not learnt
+        self.history_running = False
 
     @property
     def options(self) -> dict[str, Any]:
@@ -189,54 +238,49 @@ class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
         self._store.async_delay_save(self.learner.to_dict, SAVE_DELAY)
         return data
 
-    # -- reading states ---------------------------------------------------------------
+    async def async_learn_from_history(self) -> None:
+        """Start over from everything the recorder has (runs in the background)."""
+        from .history import async_learn_from_history  # recorder is only imported when used
 
-    def _number(self, entity_id: str | None, attribute: str | None = None) -> float | None:
-        if not entity_id or (state := self.hass.states.get(entity_id)) is None:
-            return None
-        value = state.attributes.get(attribute) if attribute else state.state
-        if value in (None, STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return None
+        if self.history_running:
+            return
+        self.history_running = True
+        self.learner.history = {"status": "running", "started_at": dt_util.now().isoformat()}
+        self.async_update_listeners()
         try:
-            return float(value)
-        except (TypeError, ValueError):
-            return None
+            self.learner = await async_learn_from_history(self.hass, self)
+        except Exception:  # noqa: BLE001 - a failing history must not break live learning
+            _LOGGER.exception("Learning from the history failed")
+            self.learner.history = {"status": "failed", "learnt_at": dt_util.now().isoformat()}
+        finally:
+            self.history_running = False
+        await self.async_save()
+        await self.async_refresh()
 
-    def _energy_kwh(self, entity_id: str | None) -> float | None:
-        value = self._number(entity_id)
-        if value is None or (state := self.hass.states.get(entity_id or "")) is None:
-            return None
-        factor = TO_KWH.get(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "kWh"))
-        return None if factor is None else value * factor
+    # -- reading ----------------------------------------------------------------------
 
-    def _outdoor(self, options: dict[str, Any]) -> float | None:
-        if (value := self._number(options.get(CONF_OUTDOOR))) is not None:
-            return value
-        return self._number(options.get(CONF_WEATHER), "temperature")
-
-    def _room(self, room: dict[str, Any], now: datetime) -> RoomReading:
+    def _room(self, get: StateGetter, room: dict[str, Any], now: datetime) -> RoomReading:
         """Everything in one area: mean temperature, mean setpoint, highest valve demand, windows, motion."""
         area = ar.async_get(self.hass).async_get_area(room[ROOM_AREA])
         reading = RoomReading(name=area.name if area else room[ROOM_AREA])
         climates = [
             state
             for entity_id in room.get(ROOM_CLIMATES, [])
-            if (state := self.hass.states.get(entity_id)) is not None and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            if (state := get(entity_id)) is not None and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ]
         heating = [state for state in climates if state.state != "off"]
-        reading.heating_on = bool(heating)
 
-        temperatures = [value for entity_id in room.get(ROOM_TEMPERATURES, []) if (value := self._number(entity_id)) is not None]
+        temperatures = [value for entity_id in room.get(ROOM_TEMPERATURES, []) if (value := _number(get, entity_id)) is not None]
         if not temperatures:
             temperatures = [
-                value for state in climates if (value := self._number(state.entity_id, "current_temperature")) is not None
+                value for state in climates if (value := _number(get, state.entity_id, "current_temperature")) is not None
             ]
         reading.temperature = _mean(temperatures)
         reading.setpoint = _mean(
-            [value for state in heating if (value := self._number(state.entity_id, "temperature")) is not None]
+            [value for state in heating if (value := _number(get, state.entity_id, "temperature")) is not None]
         )
 
-        valves = [value for entity_id in room.get(ROOM_VALVES, []) if (value := self._number(entity_id)) is not None]
+        valves = [value for entity_id in room.get(ROOM_VALVES, []) if (value := _number(get, entity_id)) is not None]
         if valves:
             reading.demand = min(max(max(valves), 0.0), 100.0)
         elif climates and not heating:
@@ -247,43 +291,73 @@ class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
             reading.demand = max(known) if known else None
 
         reading.window_open = any(
-            (state := self.hass.states.get(entity_id)) is not None and state.state == STATE_ON
-            for entity_id in room.get(ROOM_OPENINGS, [])
+            (state := get(entity_id)) is not None and state.state == STATE_ON for entity_id in room.get(ROOM_OPENINGS, [])
         )
-        motion_states = [state for entity_id in room.get(ROOM_MOTION, []) if (state := self.hass.states.get(entity_id))]
+        motion_states = [state for entity_id in room.get(ROOM_MOTION, []) if (state := get(entity_id))]
         if any(state.state == STATE_ON for state in motion_states):
             reading.last_motion = now
         elif motion_states:
             reading.last_motion = max(state.last_changed for state in motion_states)
         reading.humidity = _mean(
-            [value for entity_id in room.get(ROOM_HUMIDITY, []) if (value := self._number(entity_id)) is not None]
+            [value for entity_id in room.get(ROOM_HUMIDITY, []) if (value := _number(get, entity_id)) is not None]
         )
         return reading
+
+    def snapshot(self, get: StateGetter, now: datetime) -> Snapshot:
+        options = self.options
+        outdoor = _number(get, options.get(CONF_OUTDOOR))
+        if outdoor is None:
+            outdoor = _number(get, options.get(CONF_WEATHER), "temperature")
+        return Snapshot(
+            outdoor=outdoor,
+            supply=_number(get, options.get(CONF_SUPPLY)),
+            return_temperature=_number(get, options.get(CONF_RETURN)),
+            meter_kwh=_energy_kwh(get, options.get(CONF_HEAT_ENERGY)),
+            rooms=[(room, self._room(get, room, now)) for room in options[CONF_ROOMS]],
+        )
+
+    # -- learning ---------------------------------------------------------------------
+
+    def learn(self, learner: HouseLearner, now: datetime, snapshot: Snapshot) -> None:
+        options = self.options
+        night = in_window(now, _parse_time(options[CONF_NIGHT_START]), _parse_time(options[CONF_NIGHT_END]))
+        setpoints: list[float] = []
+        for room, reading in snapshot.rooms:
+            learner.room(room[ROOM_AREA]).update(
+                now, reading.temperature, reading.setpoint, reading.demand, snapshot.outdoor, night, paused=reading.window_open
+            )
+            if reading.setpoint is not None:
+                setpoints.append(reading.setpoint)
+        if setpoints and not night:
+            learner.update_comfort(sum(setpoints) / len(setpoints))
+        indoor = _mean([reading.temperature for _, reading in snapshot.rooms if reading.temperature is not None])
+        learner.add_sample(
+            now,
+            {"indoor": indoor, "outdoor": snapshot.outdoor, "supply": snapshot.supply, "return": snapshot.return_temperature},
+            snapshot.meter_kwh,
+        )
 
     # -- calculation ------------------------------------------------------------------
 
     def calculate(self, now: datetime) -> DegreeDealerData:
         options = self.options
         learner = self.learner
-        night_start = _parse_time(options[CONF_NIGHT_START])
-        night_end = _parse_time(options[CONF_NIGHT_END])
-        night = in_window(now, night_start, night_end)
+        snapshot = self.snapshot(self.hass.states.get, now)
+        if not self.history_running:
+            self.learn(learner, now, snapshot)
 
         data = DegreeDealerData(
-            outdoor=self._outdoor(options),
-            supply=self._number(options.get(CONF_SUPPLY)),
-            return_temperature=self._number(options.get(CONF_RETURN)),
+            outdoor=snapshot.outdoor,
+            supply=snapshot.supply,
+            return_temperature=snapshot.return_temperature,
+            learning_days=len(learner.days),
+            history=dict(learner.history or {}),
         )
-
         temperatures: list[float] = []
         setpoints: list[float] = []
-        for room in options[CONF_ROOMS]:
+        for room, reading in snapshot.rooms:
             area_id = room[ROOM_AREA]
-            reading = self._room(room, now)
             room_learner = learner.room(area_id)
-            room_learner.update(
-                now, reading.temperature, reading.setpoint, reading.demand, data.outdoor, night, paused=reading.window_open
-            )
             if reading.temperature is not None:
                 temperatures.append(reading.temperature)
             if reading.setpoint is not None:
@@ -308,32 +382,34 @@ class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
                 )
             )
         data.indoor = _round(_mean(temperatures), 2)
-        if setpoints and not night:
-            learner.update_comfort(sum(setpoints) / len(setpoints))
-
-        learner.add_sample(
-            now,
-            {"indoor": data.indoor, "outdoor": data.outdoor, "supply": data.supply, "return": data.return_temperature},
-            self._energy_kwh(options.get(CONF_HEAT_ENERGY)),
-        )
-        data.learning_days = len(learner.days)
-
-        # supply temperature advice from the valves
-        reference = self._number(options.get(CONF_SUPPLY_REFERENCE))
-        data.supply_base = reference if reference is not None else data.supply
-        data.advice = advise_supply(
-            data.supply_base,
-            [RoomDemand(room.name, room.demand, room.cold_minutes, room.exclude) for room in data.rooms],
-            float(options[CONF_SUPPLY_MIN]),
-            float(options[CONF_SUPPLY_MAX]),
-        )
 
         # return temperature target
-        expected = self._number(options.get(CONF_EXPECTED_RETURN))
+        expected = _number(self.hass.states.get, options.get(CONF_EXPECTED_RETURN))
         if expected is not None:
             data.return_target, data.return_target_source = expected, "expected_return"
         else:
             data.return_target, data.return_target_source = float(options[CONF_TARGET_RETURN]), "configured"
+
+        # advice for what the controller can control, from the valves
+        data.control_mode = options[CONF_CONTROL_MODE]
+        demands = [RoomDemand(room.name, room.demand, room.cold_minutes, room.exclude) for room in data.rooms]
+        if data.control_mode == CONTROL_SUPPLY:
+            reference = _number(self.hass.states.get, options.get(CONF_SUPPLY_REFERENCE))
+            data.advice_base = reference if reference is not None else data.supply
+            data.advice = advise_supply(
+                data.advice_base, demands, float(options[CONF_SUPPLY_MIN]), float(options[CONF_SUPPLY_MAX])
+            )
+        elif data.control_mode == CONTROL_RETURN:
+            limit = _number(self.hass.states.get, options.get(CONF_RETURN_LIMIT))
+            data.advice_base = limit if limit is not None else data.return_temperature
+            data.advice = advise_return_limit(
+                data.advice_base,
+                data.return_temperature,
+                demands,
+                data.return_target,
+                float(options[CONF_RETURN_LIMIT_MIN]),
+                float(options[CONF_RETURN_LIMIT_MAX]),
+            )
 
         # house model
         data.heat_loss = fit_heat_loss(learner.heat_loss_samples(int(options[CONF_METER_LAG])))
@@ -346,13 +422,11 @@ class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
         learnt_rate = learner.heat_up_rate()
         data.heat_up_rate_learnt = learnt_rate is not None
         data.heat_up_rate = learnt_rate if learnt_rate is not None else DEFAULT_HEAT_UP_RATE
-        data.comfort = learner.comfort if learner.comfort is not None else (
-            sum(setpoints) / len(setpoints) if setpoints else None
-        )
+        data.comfort = learner.comfort if learner.comfort is not None else _mean(setpoints)
 
         # night setback economics
-        data.window = next_window(now, night_start, night_end)
-        missing = [
+        data.window = next_window(now, _parse_time(options[CONF_NIGHT_START]), _parse_time(options[CONF_NIGHT_END]))
+        data.setback_missing = [
             key
             for key, value in (
                 ("heat_loss_coefficient", data.ua),
@@ -362,8 +436,7 @@ class DegreeDealerCoordinator(DataUpdateCoordinator[DegreeDealerData]):
             )
             if value is None
         ]
-        data.setback_missing = missing
-        if not missing:
+        if not data.setback_missing:
             assert data.ua is not None and data.time_constant is not None
             assert data.comfort is not None and data.outdoor is not None
             hours = (data.window[1] - data.window[0]).total_seconds() / 3600

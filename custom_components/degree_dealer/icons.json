@@ -1,11 +1,15 @@
 {
   "entity": {
+    "button": {
+      "learn_from_history": { "default": "mdi:history" }
+    },
     "sensor": {
       "indoor_temperature": { "default": "mdi:home-thermometer" },
       "heat_demand": { "default": "mdi:valve" },
       "supply_advice": { "default": "mdi:thermometer-chevron-up" },
+      "return_limit_advice": { "default": "mdi:thermometer-water" },
       "supply_return_difference": { "default": "mdi:thermometer-minus" },
-      "return_excess": { "default": "mdi:thermometer-water" },
+      "return_excess": { "default": "mdi:thermometer-alert" },
       "heat_loss_coefficient": { "default": "mdi:home-export-outline" },
       "time_constant": { "default": "mdi:timer-sand" },
       "heat_up_rate": { "default": "mdi:trending-up" },

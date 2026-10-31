@@ -21,6 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DegreeDealerConfigEntry)
         # after the platforms, so the sensors' entity ids are in the registry
         await async_setup_dashboard(hass, entry, coordinator.options)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
+    if coordinator.learner.history is None:
+        # first start: learn from everything the recorder has, in the background
+        entry.async_create_background_task(hass, coordinator.async_learn_from_history(), "degree_dealer learn from history")
     return True
 
 
