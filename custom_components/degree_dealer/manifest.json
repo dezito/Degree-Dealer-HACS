@@ -13,10 +13,10 @@
     "frontend",
     "lovelace"
   ],
-  "documentation": "https://github.com/dezito/Degree-Dealer-HACS",
+  "documentation": "https://github.com/dezito/Degree-Dealer-Integration",
   "integration_type": "service",
   "iot_class": "calculated",
-  "issue_tracker": "https://github.com/dezito/Degree-Dealer-HACS/issues",
+  "issue_tracker": "https://github.com/dezito/Degree-Dealer-Integration/issues",
   "requirements": [],
   "version": "0.0.1"
 }
