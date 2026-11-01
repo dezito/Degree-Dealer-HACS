@@ -1,4 +1,4 @@
-# Degree-Dealer-HACS agent guide
+# Degree-Dealer-Integration agent guide
 
 Instructions for coding agents working in this repository. Do not guess behavior
 that writes to the heating controller or thermostats.
@@ -28,7 +28,7 @@ alongside implementing the request. Point out assumptions that look wrong.
   value changes meaningfully; controller parameters may be stored in flash.
 - Keep hardware specific code behind adapters (controller, thermostats, meter
   data) so other brands can be added later.
-- Sister projects BattMind-HACS and Cable-Juice-Planner-HACS are references for
+- Sister projects BattMind-Integration and Cable-Juice-Planner-Integration are references for
   structure (coordinator, config flow, dashboard, translations); follow their
   conventions where they fit.
 - Translations (`strings.json` + `translations/{en,da,de,pl,uk}.json`) and
